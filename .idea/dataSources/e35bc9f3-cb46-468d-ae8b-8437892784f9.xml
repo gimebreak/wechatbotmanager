@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="sample_db.sqlite">
+  <database-model serializer="dbm" rdbms="SQLITE" format-version="4.4">
+    <root id="1"/>
+    <schema id="2" parent="1" name="main">
+      <Current>1</Current>
+      <Visible>1</Visible>
+    </schema>
+    <collation id="3" parent="1" name="BINARY"/>
+    <collation id="4" parent="1" name="NOCASE"/>
+    <collation id="5" parent="1" name="RTRIM"/>
+    <table id="6" parent="2" name="ADV_whitelist_user"/>
+    <table id="7" parent="2" name="adv_blacklist"/>
+    <table id="8" parent="2" name="adv_notification_group"/>
+    <table id="9" parent="2" name="auto_reply"/>
+    <table id="10" parent="2" name="favorate_message"/>
+    <table id="11" parent="2" name="immediate_group_sending"/>
+    <table id="12" parent="2" name="keyword_blacklist"/>
+    <table id="13" parent="2" name="keyword_notification_group"/>
+    <table id="14" parent="2" name="keyword_whitelist_user"/>
+    <table id="15" parent="2" name="role"/>
+    <table id="16" parent="2" name="roles_users"/>
+    <table id="17" parent="2" name="sqlite_master">
+      <System>1</System>
+    </table>
+    <table id="18" parent="2" name="timing_group_sending"/>
+    <table id="19" parent="2" name="user"/>
+    <table id="20" parent="2" name="wechat_group"/>
+    <table id="21" parent="2" name="wechat_info"/>
+    <table id="22" parent="2" name="wechat_message"/>
+    <table id="23" parent="2" name="wechat_user"/>
+    <table id="24" parent="2" name="wechatgroup"/>
+    <table id="25" parent="2" name="wechatinfo"/>
+    <table id="26" parent="2" name="wechatuser"/>
+    <table id="27" parent="2" name="welcome_info"/>
+    <column id="28" parent="6" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="29" parent="6" name="wechat_user">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="30" parent="6">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="31" parent="6">
+      <ColNames>wechat_user</ColNames>
+      <RefTableName>wechat_user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="32" parent="7" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="33" parent="7" name="keyword">
+      <Position>1</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <key id="34" parent="7">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="35" parent="8" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="36" parent="8" name="wechat_group_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="37" parent="8">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="38" parent="8">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechat_group</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="39" parent="9" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="40" parent="9" name="type">
+      <Position>1</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <column id="41" parent="9" name="wechat_group_id">
+      <Position>2</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="42" parent="9" name="keyword">
+      <Position>3</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="43" parent="9" name="reply_content">
+      <Position>4</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <column id="44" parent="9" name="enabled">
+      <Position>5</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="45" parent="9">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="46" parent="9">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechat_group</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="47" parent="10" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="48" parent="10" name="wechat_message_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="49" parent="10">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="50" parent="10">
+      <ColNames>wechat_message_id</ColNames>
+      <RefTableName>wechat_message</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="51" parent="11" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="52" parent="11" name="content">
+      <Position>1</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <column id="53" parent="11" name="enabled">
+      <Position>2</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="54" parent="11">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="55" parent="12" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="56" parent="12" name="keyword">
+      <Position>1</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <key id="57" parent="12">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="58" parent="13" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="59" parent="13" name="wechat_group_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="60" parent="13">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="61" parent="13">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechat_group</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="62" parent="14" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="63" parent="14" name="wechat_user_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="64" parent="14">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="65" parent="14">
+      <ColNames>wechat_user_id</ColNames>
+      <RefTableName>wechat_user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="66" parent="15" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="67" parent="15" name="name">
+      <Position>1</Position>
+      <DataType>VARCHAR(80)|0</DataType>
+    </column>
+    <column id="68" parent="15" name="description">
+      <Position>2</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <index id="69" parent="15" name="sqlite_autoindex_role_1">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>name</ColNames>
+      <ColumnCollations></ColumnCollations>
+      <Unique>1</Unique>
+    </index>
+    <key id="70" parent="15">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <key id="71" parent="15">
+      <ColNames>name</ColNames>
+      <UnderlyingIndexName>sqlite_autoindex_role_1</UnderlyingIndexName>
+    </key>
+    <column id="72" parent="16" name="user_id">
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="73" parent="16" name="role_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <foreign-key id="74" parent="16">
+      <ColNames>user_id</ColNames>
+      <RefTableName>user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <foreign-key id="75" parent="16">
+      <ColNames>role_id</ColNames>
+      <RefTableName>role</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="76" parent="17" name="type">
+      <DataType>text|0</DataType>
+    </column>
+    <column id="77" parent="17" name="name">
+      <Position>1</Position>
+      <DataType>text|0</DataType>
+    </column>
+    <column id="78" parent="17" name="tbl_name">
+      <Position>2</Position>
+      <DataType>text|0</DataType>
+    </column>
+    <column id="79" parent="17" name="rootpage">
+      <Position>3</Position>
+      <DataType>int|0</DataType>
+    </column>
+    <column id="80" parent="17" name="sql">
+      <Position>4</Position>
+      <DataType>text|0</DataType>
+    </column>
+    <column id="81" parent="18" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="82" parent="18" name="time">
+      <Position>1</Position>
+      <DataType>DATETIME|0</DataType>
+    </column>
+    <column id="83" parent="18" name="content">
+      <Position>2</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <column id="84" parent="18" name="enabled">
+      <Position>3</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="85" parent="18">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <column id="86" parent="19" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="87" parent="19" name="name">
+      <Position>1</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="88" parent="19" name="email">
+      <Position>2</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="89" parent="19" name="password">
+      <Position>3</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="90" parent="19" name="active">
+      <Position>4</Position>
+      <DataType>BOOLEAN|0</DataType>
+    </column>
+    <column id="91" parent="19" name="confirmed_at">
+      <Position>5</Position>
+      <DataType>DATETIME|0</DataType>
+    </column>
+    <index id="92" parent="19" name="sqlite_autoindex_user_1">
+      <NameSurrogate>1</NameSurrogate>
+      <ColNames>email</ColNames>
+      <ColumnCollations></ColumnCollations>
+      <Unique>1</Unique>
+    </index>
+    <key id="93" parent="19">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <key id="94" parent="19">
+      <ColNames>email</ColNames>
+      <UnderlyingIndexName>sqlite_autoindex_user_1</UnderlyingIndexName>
+    </key>
+    <check id="95" parent="19">
+      <Predicate>active IN (0, 1)</Predicate>
+    </check>
+    <column id="96" parent="20" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="97" parent="20" name="name">
+      <Position>1</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="98" parent="20" name="wechat_info_id">
+      <Position>2</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="99" parent="20">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="100" parent="20">
+      <ColNames>wechat_info_id</ColNames>
+      <RefTableName>wechat_info</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="101" parent="21" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="102" parent="21" name="admin_user_info_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="103" parent="21" name="status">
+      <Position>2</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="104" parent="21">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="105" parent="21">
+      <ColNames>admin_user_info_id</ColNames>
+      <RefTableName>user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="106" parent="22" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="107" parent="22" name="wechat_user_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="108" parent="22" name="message">
+      <Position>2</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <key id="109" parent="22">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="110" parent="22">
+      <ColNames>wechat_user_id</ColNames>
+      <RefTableName>wechat_user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="111" parent="23" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="112" parent="23" name="wechat_group_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="113" parent="23" name="name">
+      <Position>2</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <key id="114" parent="23">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="115" parent="23">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechat_group</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="116" parent="24" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="117" parent="24" name="name">
+      <Position>1</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <column id="118" parent="24" name="wechat_info_id">
+      <Position>2</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <key id="119" parent="24">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="120" parent="24">
+      <ColNames>wechat_info_id</ColNames>
+      <RefTableName>wechatinfo</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="121" parent="25" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="122" parent="25" name="admin_user_info_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="123" parent="25" name="status">
+      <Position>2</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="124" parent="25">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="125" parent="25">
+      <ColNames>admin_user_info_id</ColNames>
+      <RefTableName>user</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="126" parent="26" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="127" parent="26" name="wechat_group_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="128" parent="26" name="name">
+      <Position>2</Position>
+      <DataType>VARCHAR(255)|0</DataType>
+    </column>
+    <key id="129" parent="26">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="130" parent="26">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechatgroup</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+    <column id="131" parent="27" name="id">
+      <DataType>INTEGER|0</DataType>
+      <NotNull>1</NotNull>
+    </column>
+    <column id="132" parent="27" name="wechat_group_id">
+      <Position>1</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="133" parent="27" name="type">
+      <Position>2</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <column id="134" parent="27" name="content">
+      <Position>3</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <column id="135" parent="27" name="pic_url">
+      <Position>4</Position>
+      <DataType>TEXT|0</DataType>
+    </column>
+    <column id="136" parent="27" name="enabled">
+      <Position>5</Position>
+      <DataType>SMALLINT|0</DataType>
+    </column>
+    <key id="137" parent="27">
+      <ColNames>id</ColNames>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="138" parent="27">
+      <ColNames>wechat_group_id</ColNames>
+      <RefTableName>wechat_group</RefTableName>
+      <RefColNames>id</RefColNames>
+    </foreign-key>
+  </database-model>
+</dataSource>
