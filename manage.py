@@ -1,16 +1,9 @@
 import os
-from flask import Flask, url_for, redirect, render_template, request, abort
-from flask_security import Security, SQLAlchemyUserDatastore, \
-    UserMixin, RoleMixin, login_required, current_user
-from flask_security.utils import encrypt_password,hash_password
-import flask_admin
-
-from flask_admin import helpers as admin_helpers
-
-from app import create_app
 from config import DevelopmentConfig
-from app.model import user_datastore,Role
-from app.model.User import db
+from app import create_app
+from app.model import db,user_datastore
+from app.model.User import Role
+from flask_security.utils import  hash_password
 
 app = create_app(DevelopmentConfig)
 
@@ -33,7 +26,7 @@ def build_sample_db():
         db.session.commit()
 
         test_user = user_datastore.create_user(
-            name='Admin',
+            name='admin',
             email='admin',
             password=hash_password('admin'),
             roles = [super_user_role,]
@@ -64,15 +57,17 @@ def build_sample_db():
         db.session.commit()
     return
 
-
-
 if __name__ =='__main__':
 
     # Build a sample db on the fly, if one does not exist yet.
-    app_dir = os.path.realpath(os.path.dirname(__file__))
+    # app_dir = os.path.realpath(os.path.dirname(__file__))
     # print(app)
     # database_path = os.path.join(app_dir, app.config['DATABASE_FILE'])
+    # print(database_path)
+    # print(os.path.exists(database_path))
     # if not os.path.exists(database_path):
-    build_sample_db()
+    # build_sample_db()
+
+
 
     app.run(debug=True)

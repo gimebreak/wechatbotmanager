@@ -1,7 +1,7 @@
 from flask_security import UserMixin,RoleMixin
 from flask_sqlalchemy import SQLAlchemy
-db=SQLAlchemy()
 
+db=SQLAlchemy()
 
 roles_users = db.Table(
     'roles_users',
@@ -20,10 +20,10 @@ class Role(db.Model, RoleMixin):
     def __str__(self):
         return self.name
 
-
+#坑 表的大小写，驼峰式写法的大写字母会转译为'_'
 class User(db.Model, UserMixin):
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True,autoincrement=True)
     name = db.Column(db.String(255),)
     email = db.Column(db.String(255), unique=True,)
     password = db.Column(db.String(255),)
@@ -48,27 +48,31 @@ class Timing_group_sending(db.Model):
 #
 class Wechat_info(db.Model):
 
-    id = db.Column(db.Integer,primary_key=True)
-    admin_user_info_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    uin = db.Column(db.Integer,unique=True,comment='用户唯一标识符')
     username = db.Column(db.String(255),comment="用户名称，一个@为好友，两个@为群组")
     nickname = db.Column(db.String(255),comment="昵称")
     headimgurl = db.Column(db.String(255),comment="头像链接")
     remarkname = db.Column(db.String(255),comment="备注名")
-    sex = db.Column(db.SMALLINT,comment="性别，0-未设置（公众号、保密），1-男，2-女")
-    Signature = db.Column(db.String(255))
+    sex = db.Column(db.Integer,comment="性别，0-未设置（公众号、保密），1-男，2-女")
+    signature = db.Column(db.String(255))
+    admin_user_info_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    status=db.Column(db.SMALLINT,comment='1:登陆;0:未登录')
+    status=db.Column(db.Integer,comment='1:登陆;0:未登录')
     groups = db.relationship('Wechat_group',backref=db.backref('info'))
 
+    def __repr__(self):
+        return self.nickname
+
 class Wechat_group(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
-    wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     username = db.Column(db.String(255),comment="用户名称，一个@为好友，两个@为群组")
     nickname = db.Column(db.String(255), comment="昵称")
     remarkname = db.Column(db.String(255),comment="备注名")
-    membercout =db.Column(db.SMALLINT,comment='群内人数')
+    membercount =db.Column(db.SMALLINT,comment='群内人数')
     isowner = db.Column(db.BOOLEAN(),comment='是否群主')
-    time_group_sending_id = db.Column(db.Integer,db.ForeignKey('time_group_sending.id'))
+    time_group_sending_id = db.Column(db.Integer,db.ForeignKey('timing_group_sending.id'))
+    wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
 
     users = db.relationship('Wechat_user',backref=db.backref('group'))
     welcome_infos = db.relationship('Welcome_info',backref=db.backref('group'))
@@ -84,7 +88,8 @@ class Wechat_user(db.Model):
     nickname = db.Column(db.String(255), comment="昵称")
     remarkname = db.Column(db.String(255),comment="备注名")
     # group = db.relationship('wechat_group', backref=db.backref('users'))
-
+    def __repr__(self):
+        return self.nickname
 #
 #
 class Welcome_info(db.Model):

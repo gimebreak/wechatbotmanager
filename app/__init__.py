@@ -1,24 +1,35 @@
-from .model import user_datastore,admin,db,Role,User
-from .view.view import MyModelView,UserModelView
-from flask import Flask,url_for
+from .model import user_datastore,db,Role,User
+
+from .view.view import *
+from flask import url_for
 from flask_admin import helpers as admin_helpers
+from flask_admin import Admin
 from flask_babelex import Babel
 from flask_security import Security
-from .view import main
-
-
-
+from .view import bp
+from .itchat.wechat_reader import app
+from .model.User import *
 
 def create_app(config):
-    app = Flask(__name__)
     app.config.from_object(config)
-    admin.init_app(app)
     db.init_app(app)
     babel = Babel(app)
     security = Security(app, user_datastore)
+    app.register_blueprint(bp,url_prefix='/')
+    print(security._state)
+    admin = Admin(
+        index_view=WeChatAdminView(),
+        name='Example: Auth',
+        base_template='my_master.html',
+        template_mode='bootstrap3',
+    )
 
-    admin.add_view(MyModelView(Role, db.session, name='权限管理'))
+    admin.add_view(SuperUserView(Role, db.session, name='权限管理'))
     admin.add_view(UserModelView(User, db.session, name='用户管理'))
+    admin.add_view(WeChatGroupView(Wechat_group, db.session, name='微信群'))
+    admin.add_view(WechatMsgView(Wechat_message,db.session,name='微信群消息'))
+    admin.add_view(WechatUserView(Wechat_user,db.session,name='微信群用户'))
+    admin.init_app(app)
 
     @security.context_processor
     def security_context_processor():
@@ -28,7 +39,11 @@ def create_app(config):
             h=admin_helpers,
             get_url=url_for
         )
+
     app.app_context().push()
-    app.register_blueprint(main,url_prefix='/')
 
     return app
+
+
+
+
