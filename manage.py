@@ -29,8 +29,17 @@ def build_sample_db():
             name='admin',
             email='admin',
             password=hash_password('admin'),
-            roles = [super_user_role,]
+            roles = [super_user_role,user_role]
         )
+
+        test_user = user_datastore.create_user(
+            name='zhang',
+            email='zhang',
+            password=hash_password('123123'),
+            roles = [user_role]
+        )
+
+
         roles=[user_role, super_user_role]
         #
         # first_names = [

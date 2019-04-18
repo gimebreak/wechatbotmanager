@@ -105,18 +105,24 @@ def receive(msg):
     group = msg.get('User').get('UserName')
     username = msg.get('ActualUserName')
     nickname = msg.get('ActualNickName')
+    info_nickname = msg.get('User').get('Self').get('NickName')
+    print(info_nickname)
+    print(type(info_nickname))
     text = msg.text
     create_time = msg.get('CreateTime')
     with app.app_context():
-        print(group)
-        print(username)
-        print(nickname)
         group_record = Wechat_group.query.filter_by(username=group).first()
+        info_record = Wechat_info.query.filter_by(nickname=info_nickname).first()
+        print(info_record)
+        print('**************************************')
         if group_record:
             print(group_record.id)
             print(username)
             user_record = Wechat_user.query.filter_by(wechat_group_id=group_record.id,username=username).first()
-            msg_record = Wechat_message(wechat_user_id=user_record.id,message=text,createtime=datetime.fromtimestamp(create_time))
+            msg_record = Wechat_message(wechat_user_id=user_record.id,message=text,
+                                        createtime=datetime.fromtimestamp(create_time),
+                                       wechat_info_id=info_record.id)
+
             db.session.add(msg_record)
             db.session.commit()
 

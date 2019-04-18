@@ -315,31 +315,31 @@
       <DataType>INTEGER|0</DataType>
       <NotNull>1</NotNull>
     </column>
-    <column id="94" parent="20" name="wechat_info_id">
+    <column id="94" parent="20" name="username">
       <Position>1</Position>
-      <DataType>INTEGER|0</DataType>
+      <DataType>VARCHAR(255)|0</DataType>
     </column>
-    <column id="95" parent="20" name="username">
+    <column id="95" parent="20" name="nickname">
       <Position>2</Position>
       <DataType>VARCHAR(255)|0</DataType>
     </column>
-    <column id="96" parent="20" name="nickname">
+    <column id="96" parent="20" name="remarkname">
       <Position>3</Position>
       <DataType>VARCHAR(255)|0</DataType>
     </column>
-    <column id="97" parent="20" name="remarkname">
+    <column id="97" parent="20" name="membercount">
       <Position>4</Position>
-      <DataType>VARCHAR(255)|0</DataType>
-    </column>
-    <column id="98" parent="20" name="membercount">
-      <Position>5</Position>
       <DataType>SMALLINT|0</DataType>
     </column>
-    <column id="99" parent="20" name="isowner">
-      <Position>6</Position>
+    <column id="98" parent="20" name="isowner">
+      <Position>5</Position>
       <DataType>BOOLEAN|0</DataType>
     </column>
-    <column id="100" parent="20" name="time_group_sending_id">
+    <column id="99" parent="20" name="time_group_sending_id">
+      <Position>6</Position>
+      <DataType>INTEGER|0</DataType>
+    </column>
+    <column id="100" parent="20" name="wechat_info_id">
       <Position>7</Position>
       <DataType>INTEGER|0</DataType>
     </column>
@@ -348,13 +348,13 @@
       <Primary>1</Primary>
     </key>
     <foreign-key id="102" parent="20">
-      <ColNames>wechat_info_id</ColNames>
-      <RefTableName>wechat_info</RefTableName>
+      <ColNames>time_group_sending_id</ColNames>
+      <RefTableName>timing_group_sending</RefTableName>
       <RefColNames>id</RefColNames>
     </foreign-key>
     <foreign-key id="103" parent="20">
-      <ColNames>time_group_sending_id</ColNames>
-      <RefTableName>timing_group_sending</RefTableName>
+      <ColNames>wechat_info_id</ColNames>
+      <RefTableName>wechat_info</RefTableName>
       <RefColNames>id</RefColNames>
     </foreign-key>
     <check id="104" parent="20">

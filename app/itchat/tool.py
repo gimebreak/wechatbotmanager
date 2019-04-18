@@ -53,7 +53,8 @@ class Process_Wechat(object):
                 info = self.model_wechat_info(uin=self.wechat_info_uin, username=self.wechat_info_username,
                                    nickname=self.wechat_info_nickname, headimgurl=self.wechat_info_headimgurl,
                                    remarkname=self.wechat_info_remarkname,
-                                   sex=self.wechat_info_sex, signature=self.wechat_info_signature, status=1)
+                                   sex=self.wechat_info_sex, signature=self.wechat_info_signature, status=1,
+                                   admin_user_info_id=self.current_user.get_id())
                 self.db.session.add(info)
             try:
                 self.db.session.commit()
@@ -125,7 +126,8 @@ class Process_Wechat(object):
                         continue
 
                     we_user = self.model_wechat_user(username=username, nickname=nickname,
-                                                     remarkname=displayname,wechat_group_id=wechat_group_id.id)
+                                                     remarkname=displayname,wechat_group_id=wechat_group_id.id,
+                                                     wechat_info_id=self.wechat_info_id)
                     self.db.session.add(we_user)
 
                 try:
@@ -133,6 +135,12 @@ class Process_Wechat(object):
                 except Exception as e:
                     print(e)
                     logger.info('wechat_user提交失败')
+
+
+    def load_black_white_list(self):
+        with self.app.app_context():
+            user_record = User.query.get(self.current_user.get_id())
+            user_record
 
 
 # def process_web_init(dict,current_user,app):
@@ -186,3 +194,4 @@ class Process_Wechat(object):
 #     users = db.relationship('Wechat_user',backref=db.backref('group'))
 #     welcome_infos = db.relationship('Welcome_info',backref=db.backref('group'))
 #     auto_replies = db.relationship('Auto_reply',backref = db.backref('group'))
+

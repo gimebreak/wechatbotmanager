@@ -32,6 +32,8 @@ class User(db.Model, UserMixin):
     # role_id =db.Column(db.Integer, db.ForeignKey('role.id'))
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
+    infos = db.relationship('Wechat_info',
+                            backref=db.backref('user'))
 
     def __str__(self):
         return self.email
@@ -60,6 +62,9 @@ class Wechat_info(db.Model):
 
     status=db.Column(db.Integer,comment='1:登陆;0:未登录')
     groups = db.relationship('Wechat_group',backref=db.backref('info'))
+    users = db.relationship('Wechat_user',backref=db.backref('info'))
+    msgs = db.relationship('Wechat_message',backref=db.backref('info'))
+
 
     def __repr__(self):
         return self.nickname
@@ -79,6 +84,9 @@ class Wechat_group(db.Model):
     auto_replies = db.relationship('Auto_reply',backref = db.backref('group'))
 
 
+    def __repr__(self):
+        return self.nickname
+
 # 群内用户
 class Wechat_user(db.Model):
 
@@ -87,6 +95,9 @@ class Wechat_user(db.Model):
     username = db.Column(db.String(255),comment="用户名称，一个@为好友，两个@为群组")
     nickname = db.Column(db.String(255), comment="昵称")
     remarkname = db.Column(db.String(255),comment="备注名")
+    wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
+
+    msgs = db.relationship('Wechat_message',backref=db.backref('wechatuser'))
     # group = db.relationship('wechat_group', backref=db.backref('users'))
     def __repr__(self):
         return self.nickname
@@ -100,7 +111,7 @@ class Welcome_info(db.Model):
     content = db.Column(db.Text)
     pic_url = db.Column(db.Text)
     enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
-#
+    #
 class Auto_reply(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
@@ -125,9 +136,11 @@ class Immediate_group_sending(db.Model):
 class Wechat_message(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
-    wechat_user_id = db.Column(db.Integer,db.ForeignKey('wechat_user.id'))
+
     message = db.Column(db.Text)
     createtime = db.Column(db.DateTime())
+    wechat_user_id = db.Column(db.Integer, db.ForeignKey('wechat_user.id'))
+    wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
 
 
 class Favorate_message(db.Model):

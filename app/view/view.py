@@ -72,12 +72,98 @@ class BaseUserView(sqla.ModelView):
                 # login
                 return redirect(url_for('security.login', next=request.url))
 
-class SuperUserView(BaseUserView):
+    # 用户只能查看数据库中自己的微信信息
+    def get_list(self, page, sort_column, sort_desc, search, filters,
+                 execute=True, page_size=None):
+        count,query = super(BaseUserView,self).get_list(page, sort_column, sort_desc, search, filters,
+                 execute=False, page_size=None)
+        # 当前用户的infos
+        user_record = User.query.get(current_user.get_id()).infos
+        res = []
+        group_records=[]
+        # 当前model 过滤条件为用户info
+
+        if Wechat_group.__name__ != self.model.__name__:
+            for info in user_record:
+                group_records += Wechat_group.query.filter_by(wechat_info_id=info.id).all()
+
+            for group in group_records:
+                res += query.from_self().filter_by(wechat_group_id=group.id).all()
+            query = res
+
+        else:
+            group_records = []
+
+            for info in user_record:
+                group_records += query.from_self().filter_by(wechat_info_id=info.id).all()
+                query = group_records
+
+
+        return count,query
+
+
+# class GroupBasedView(sqla.ModelView):
+#
+#     def is_accessible(self):
+#         return (current_user.is_active and
+#                 current_user.is_authenticated and
+#                 current_user.has_role('user')
+#                 )
+#
+#     def _handle_view(self, name, **kwargs):
+#         """
+#         Override builtin _handle_view in order to redirect users when a view is not accessible.
+#         """
+#         if not self.is_accessible():
+#             if current_user.is_authenticated:
+#                 # permission denied
+#                 abort(403)
+#             else:
+#                 # login
+#                 return redirect(url_for('security.login', next=request.url))
+#
+#     def get_list(self, page, sort_column, sort_desc, search, filters,
+#                  execute=True, page_size=None):
+#         count,query = super(GroupBasedView,self).get_list(page, sort_column, sort_desc, search, filters,
+#                  execute=False, page_size=None)
+#
+#         user_record = User.query.get(current_user.get_id()).infos
+#         group_records = []
+#         res = []
+#
+#         # 当前model 过滤条件为用户info
+#         for info in user_record:
+#             group_records += Wechat_group.query.filter_by(wechat_info_id=info.id).all()
+#         print(type(Wechat_group),type(self.model))
+#         print(Wechat_group.__name__,self.model.__name__)
+#         print(isinstance(Wechat_group, type(self.model)))
+#         print('********************************)))))))))))))))))')
+#
+#         for group in group_records:
+#             res += query.from_self().filter_by(wechat_group_id=group.id).all()
+#         query = res
+#
+#         return count,query
+
+class SuperUserView(sqla.ModelView):
 
     def is_accessible(self):
         return (current_user.is_active and
                 current_user.is_authenticated and
-                current_user.has_role('superuser'))
+                current_user.has_role('user') or current_user.has_role('superuser')
+        )
+
+    def _handle_view(self, name, **kwargs):
+        """
+        Override builtin _handle_view in order to redirect users when a view is not accessible.
+        """
+        if not self.is_accessible():
+            if current_user.is_authenticated:
+                # permission denied
+                abort(403)
+            else:
+                # login
+                return redirect(url_for('security.login', next=request.url))
 
 class UserModelView(SuperUserView):
     # column_searchable_list=('first_name','last_name')
@@ -90,6 +176,7 @@ class UserModelView(SuperUserView):
         'active': u'激活',
         'roles': u'角色'
     }
+
 
 class WeChatGroupView(BaseUserView):
     column_list = ('id','info', 'username', 'nickname')
@@ -106,25 +193,48 @@ class WeChatGroupView(BaseUserView):
         'auto_replies':'自动回复',
         'timing_group_sending':'定时发送',
     }
+    #内联模型: 只有one2many才可进行内联编辑
+    # inline_models = (Wechat_user,)
     # form_columns = (Wechat_group.id,Wechat_group.users)
 
 class WechatMsgView(BaseUserView):
-    column_list = ('id','wechat_user_id.nickname','message','createtime')
+    column_list = ('id','wechatuser','wechatuser.group.nickname','message','createtime')
     column_labels = {
         'id':u'序号',
-        'wechat_user_id.nickname':u'微信名',
+        'wechatuser':u'微信名',
+        'wechatuser.group.nickname': '所在群',
         'message':'消息内容',
-        'createtime':'创建时间'
+        'createtime':'创建时间',
+
     }
-    pass
+
 
 class WechatUserView(BaseUserView):
-    column_list = ('id', 'nickname','wechat_group_id.nickname', )
+    column_list = ('id', 'nickname','group', )
     column_labels = {
         'id': u'序号',
         'nickname': u'微信名',
-        'wechat_group_id.nickname':u'所属群',
+        'group':u'所属群',
     }
+
+class WechatWelcomeInfoView(BaseUserView):
+    column_list = ('id', 'group','type','content','pic_url','enabled' )
+    column_labels = {
+        'id': u'序号',
+        'group':u'所属群',
+        'type':u'格式',
+        'content': u'内容',
+        'pic_url':u'图片地址',
+        'enabled':u'启动'
+    }
+
+
+    id = db.Column(db.Integer,primary_key=True)
+    wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
+    type = db.Column(db.SMALLINT,comment='1:message,0:pic_content')
+    content = db.Column(db.Text)
+    pic_url = db.Column(db.Text)
+    enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
 
 
 @bp.route('/')
