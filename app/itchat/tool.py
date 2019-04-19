@@ -7,10 +7,8 @@ logger.setLevel(INFO)
 
 
 class Process_Wechat(object):
-
     def __init__(self,db,app,current_user,itchat):
         '''
-
         :param db:database handler
         :param app: flask app
         :param current_user: deepcopy of current user
@@ -24,7 +22,8 @@ class Process_Wechat(object):
         self.model_wechat_group = Wechat_group
         self.model_wechat_user = Wechat_user
         self.model_wechat_message = Wechat_message
-
+        self.model_welcome_info = Welcome_info
+        self.model_user =User
 
     def process_web_init(self,dict):
         '''
@@ -42,7 +41,8 @@ class Process_Wechat(object):
         self.wechat_info_signature = wechat_user.get('Signature')
 
         with self.app.app_context():
-            user_record = self.model_wechat_info.query.filter_by(uin=self.wechat_info_uin).first()
+            user_record = self.model_wechat_info.query.filter_by(uin=self.wechat_info_uin,
+                                                                 admin_user_info_id=self.current_user.get_id()).first()
 
             if user_record:
                 user_record.nickname,user_record.sex = self.wechat_info_nickname, self.wechat_info_sex
@@ -64,12 +64,34 @@ class Process_Wechat(object):
                     self.wechat_info_id = user_record.id
                 logger.info('**************************{}'.format(self.wechat_info_id))
             except Exception as e:
-                print(e)
                 logger.info('wechat_info提交失败')
 
     def _initialize(self,dbmodel,uin):
         # ?????初始化时判断该用户api返回信息和数据库历史中的变化
         pass
+
+    def load_welcomeinfo(self):
+
+        '''
+        :return: tuple(usernameofgroup,welcomesends)
+        '''
+
+        welcomeinfo_list=[]
+        with self.app.app_context():
+            try:
+                user_record = self.model_user.query.get(self.current_user.get_id())
+            except:
+                return welcomeinfo_list
+            for info in user_record.infos:
+                for group in info.groups:
+                    for welcome in group.welcome_infos:
+                        if welcome.enabled ==1:
+                            if welcome.type==1:
+                                welcomeinfo_list.append((welcome.group.username,welcome.content))
+                            else:
+                                welcomeinfo_list.append((welcome.group.username,welcome.pic_url))
+
+        return welcomeinfo_list
 
     def process_chatroom(self,chatroom_list):
         with self.app.app_context():
@@ -82,8 +104,9 @@ class Process_Wechat(object):
                 membercount = chatroom.get('MemberCount')
                 isowner = True if chatroom.get('IsOwner') == '1' else False
 
-                #判断是否存在，存在则更新
-                group_record = self.model_wechat_group.query.filter_by(nickname=nickname).first()
+                #判断是否存在，存在则更新,注意wechat_info_id 加入筛选条件
+                group_record = self.model_wechat_group.query.filter_by(nickname=nickname,
+                                                                       wechat_info_id=self.wechat_info_id).first()
                 if group_record:
                     group_record.username, group_record.remarkname, group_record.membercount = username, remarkname, membercount
                     self.db.session.add(group_record)
@@ -92,11 +115,10 @@ class Process_Wechat(object):
                                               nickname=nickname,remarkname=remarkname,
                                               membercount=membercount,isowner=isowner)
                 self.db.session.add(group)
-                print(group)
+
             try:
                 self.db.session.commit()
             except Exception as e:
-                print(e)
                 logger.info('wechat_group提交失败')
 
     def process_wechatuser(self,chatroom_list):
@@ -109,8 +131,8 @@ class Process_Wechat(object):
             for chatroom in chatroom_list:
                 chatroom_username = chatroom.get('UserName')
                 chatroom_nickname = chatroom.get('NickName')
-                #先取群nickname,查库返回query对象
-                wechat_group_id = self.model_wechat_group.query.filter_by(nickname=chatroom_nickname).first()
+                #先取群nickname,查库返回query对象,
+                wechat_group_id = self.model_wechat_group.query.filter_by(nickname=chatroom_nickname,wechat_info_id=self.wechat_info_id).first()
                 chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
                 memberlist = chatroom_info.get('MemberList')
                 for member in memberlist:
@@ -120,6 +142,7 @@ class Process_Wechat(object):
 
                     # 判断该用户名是否存在，存在则更新
                     weuser_record = self.model_wechat_user.query.filter_by(nickname=nickname,wechat_group_id=wechat_group_id.id).first()
+
                     if weuser_record:
                         weuser_record.username,weuser_record.remarkname = username, displayname
                         self.db.session.add(weuser_record)
@@ -128,6 +151,7 @@ class Process_Wechat(object):
                     we_user = self.model_wechat_user(username=username, nickname=nickname,
                                                      remarkname=displayname,wechat_group_id=wechat_group_id.id,
                                                      wechat_info_id=self.wechat_info_id)
+                    print(we_user)
                     self.db.session.add(we_user)
 
                 try:
@@ -136,11 +160,68 @@ class Process_Wechat(object):
                     print(e)
                     logger.info('wechat_user提交失败')
 
+    def load_adv_rule(self):
 
-    def load_black_white_list(self):
+        def load_notification_group(user_record):
+            groups = user_record.adv_notification_groups
+            notifs = list(map(lambda x:x.group.username,groups))
+            return notifs
+
+        def load_whitelist_user(user_record):
+            users = user_record.adv_whitelist_users
+            uncensor = list(map(lambda x:x.user.username,users))
+            return uncensor
+
+        def load_adv_list(user_record):
+            keywords = user_record.adv_blacklist_keywords
+            keywords = list(map(lambda x:x.keyword,keywords))
+            return keywords
+
         with self.app.app_context():
             user_record = User.query.get(self.current_user.get_id())
-            user_record
+            notifs = load_notification_group(user_record)
+            uncensor = load_whitelist_user(user_record)
+            keywords = load_adv_list(user_record)
+
+        return notifs,uncensor,keywords
+
+    def load_keyword_rule(self):
+        def load_notification_group(user_record):
+            groups = user_record.keyword_notification_groups
+            notifs = list(map(lambda x:x.group.username,groups))
+            return notifs
+
+        def load_whitelist_user(user_record):
+            users = user_record.keyword_whitelist_users
+            uncensor = list(map(lambda x:x.user.username,users))
+            return uncensor
+
+        def load_keyword_list(user_record):
+            keywords = user_record.keyword_blacklist
+            keywords = list(map(lambda x:x.keyword,keywords))
+            return keywords
+
+        with self.app.app_context():
+            user_record = User.query.get(self.current_user.get_id())
+            notifs = load_notification_group(user_record)
+            uncensor = load_whitelist_user(user_record)
+            keywords = load_keyword_list(user_record)
+
+        return notifs,uncensor,keywords
+
+
+
+class WechatBaseData(object):
+
+    def __init__(self,chatroomList):
+        dict = {}
+        for room in chatroomList:
+            membercount = room.get('MemberCount')
+            username = room.get('UserName')
+            dict.update({username:membercount})
+
+        self.room_member_count = dict
+
 
 
 # def process_web_init(dict,current_user,app):
