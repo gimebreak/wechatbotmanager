@@ -1,11 +1,16 @@
 import os
 from config import DevelopmentConfig
 from app import create_app
-from app.model import db,user_datastore
-from app.model.User import Role
-from flask_security.utils import  hash_password
+from app.model import db,Role,user_datastore
+from flask_migrate import Migrate,MigrateCommand
+from flask_script import Manager
+from flask_security.utils import hash_password
+
 
 app = create_app(DevelopmentConfig)
+manager = Manager(app)
+migrate = Migrate(app,db)
+manager.add_command('db',MigrateCommand)
 
 def build_sample_db():
     """
@@ -77,6 +82,5 @@ if __name__ =='__main__':
     # if not os.path.exists(database_path):
     # build_sample_db()
 
-
-
-    app.run(debug=True)
+    app.run()
+    # app.run(debug=True)

@@ -33,38 +33,36 @@ class User(db.Model, UserMixin):
     # role_id =db.Column(db.Integer, db.ForeignKey('role.id'))
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
-    infos = db.relationship('Wechat_info',
+    infos = db.relationship('WechatInfo',
                             backref=db.backref('user'))
 
-    adv_notification_groups = db.relationship('adv_notification_group',
+    adv_notification_groups = db.relationship('AdvNotificationGroup',
                                               backref=db.backref('user'))
-    adv_whitelist_users = db.relationship('adv_whitelist_user',
+    adv_whitelist_users = db.relationship('AdvWhitelistUser',
                                           backref=db.backref('user'))
-    adv_blacklist_keywords = db.relationship('adv_blacklist',
-
+    adv_blacklist_keywords = db.relationship('AdvBlacklist',
                                           backref=db.backref('user'))
-    keyword_notification_groups = db.relationship('keyword_notification_group',
+    keyword_notification_groups = db.relationship('KeywordNotificationGroup',
                                           backref=db.backref('user'))
-    keyword_whitelist_users =  db.relationship('keyword_whitelist_user',
-                                          backref=db.backref('user'))
-    keyword_blacklist = db.relationship('keyword_blacklist',
+    keyword_whitelist_users =  db.relationship('KeywordWhitelistUser',backref=db.backref('user'))
+    keyword_blacklist = db.relationship('KeywordBlacklist',
                                           backref=db.backref('user'))
 
 
     def __str__(self):
         return self.email
 
-class Timing_group_sending(db.Model):
+class TimingGroupSending(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     time = db.Column(db.DateTime())
     content = db.Column(db.Text)
     enabled = db.Column(db.SMALLINT, comment='1:功能启用,0:此功能暂停')
 
-    groups = db.relationship('Wechat_group', backref=db.backref('timing_group_sending'))
+    groups = db.relationship('WechatGroup', backref=db.backref('timing_group_sending'))
 
 
 #
-class Wechat_info(db.Model):
+class WechatInfo(db.Model):
 
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     uin = db.Column(db.Integer,comment='用户唯一标识符')
@@ -77,15 +75,15 @@ class Wechat_info(db.Model):
     admin_user_info_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     status=db.Column(db.Integer,comment='1:登陆;0:未登录')
-    groups = db.relationship('Wechat_group',backref=db.backref('info'))
-    users = db.relationship('Wechat_user',backref=db.backref('info'))
-    msgs = db.relationship('Wechat_message',backref=db.backref('info'))
+    groups = db.relationship('WechatGroup',backref=db.backref('info'))
+    users = db.relationship('WechatUser',backref=db.backref('info'))
+    msgs = db.relationship('WechatMessage',backref=db.backref('info'))
 
 
     def __repr__(self):
         return self.nickname
 
-class Wechat_group(db.Model):
+class WechatGroup(db.Model):
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     username = db.Column(db.String(255),comment="用户名称，一个@为好友，两个@为群组")
     nickname = db.Column(db.String(255), comment="昵称")
@@ -95,19 +93,19 @@ class Wechat_group(db.Model):
     time_group_sending_id = db.Column(db.Integer,db.ForeignKey('timing_group_sending.id'))
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
 
-    users = db.relationship('Wechat_user',backref=db.backref('group'))
-    welcome_infos = db.relationship('Welcome_info',backref=db.backref('group'))
-    auto_replies = db.relationship('Auto_reply',backref = db.backref('group'))
-    adv_notification_groups = db.relationship('adv_notification_group',
+    users = db.relationship('WechatUser',backref=db.backref('group'))
+    welcome_infos = db.relationship('WelcomeInfo',backref=db.backref('group'))
+    auto_replies = db.relationship('AutoReply',backref = db.backref('group'))
+    adv_notification_groups = db.relationship('AdvNotificationGroup',
                                               backref=db.backref('group'))
-    keyword_notification_groups = db.relationship('key_notification_group',
+    keyword_notification_groups = db.relationship('KeywordNotificationGroup',
                                               backref=db.backref('group'))
 
     def __repr__(self):
         return self.nickname
 
 # 群内用户
-class Wechat_user(db.Model):
+class WechatUser(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
@@ -116,17 +114,20 @@ class Wechat_user(db.Model):
     remarkname = db.Column(db.String(255),comment="备注名")
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
 
-    msgs = db.relationship('Wechat_message',
-                           backref=db.backref('wechatuser'))
-    adv_whitelist_users = db.relationship('Wechat_message',
-                                          backref=db.backref('wechatuser'))
+    msgs = db.relationship('WechatMessage',
+                           backref=db.backref('wechat_user'))
+    adv_whitelist_users = db.relationship('AdvWhitelistUser',
+                                          backref=db.backref('wechat_user'))
+
+    keyword_whitelist_users = db.relationship('KeywordWhitelistUser',
+                                          backref=db.backref('wechat_user'))
 
     # group = db.relationship('wechat_group', backref=db.backref('users'))
     def __repr__(self):
         return self.nickname
 #
 #
-class Welcome_info(db.Model):
+class WelcomeInfo(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
@@ -135,7 +136,7 @@ class Welcome_info(db.Model):
     pic_url = db.Column(db.Text)
     enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
     #
-class Auto_reply(db.Model):
+class AutoReply(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     type = db.Column(db.SMALLINT,comment='1:定向,0:全部')
@@ -147,7 +148,7 @@ class Auto_reply(db.Model):
 
 
 
-class Immediate_group_sending(db.Model):
+class ImmediateGroupSending(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
 
@@ -156,56 +157,57 @@ class Immediate_group_sending(db.Model):
     content = db.Column(db.Text)
     enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
 
-class Wechat_message(db.Model):
-
+class WechatMessage(db.Model):
     id = db.Column(db.Integer,primary_key=True)
-
     message = db.Column(db.Text)
     createtime = db.Column(db.DateTime())
     wechat_user_id = db.Column(db.Integer, db.ForeignKey('wechat_user.id'))
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
 
 
-class Favorate_message(db.Model):
+class FavorateMessage(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     wechat_message_id = db.Column(db.Integer, db.ForeignKey('wechat_message.id'))
 
-class Adv_notification_group(db.Model):
+class AdvNotificationGroup(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
     wechat_group_id = db.Column(db.Integer, db.ForeignKey('wechat_group.id'))
-
-class ADV_whitelist_user(db.Model):
+#
+class AdvWhitelistUser(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     wechat_user_id = db.Column(db.Integer,db.ForeignKey('wechat_user.id'))
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
 
-
-class Adv_blacklist(db.Model):
+#
+class AdvBlacklist(db.Model):
    # 广告关键字设置
     id = db.Column(db.Integer,primary_key=True)
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
     keyword = db.Column(db.String(255))
 
-class Keyword_notification_group(db.Model):
+class KeywordNotificationGroup(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+    # user = db.relationship('User',backref=('keyword_notification_groups'))
     wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
+    # group = db.relationship('WechatGroup',backref=('keyword_notification_groups'))
 
-class Keyword_whitelist_user(db.Model):
+class KeywordWhitelistUser(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
     wechat_user_id = db.Column(db.Integer,db.ForeignKey('wechat_user.id'))
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
-
-class keyword_blacklist(db.Model):
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+#
+class KeywordBlacklist(db.Model):
     # interested关键字设置
     id = db.Column(db.Integer,primary_key=True)
     keyword = db.Column(db.String(255))
-    user_id = db.column(db.Integer,db.ForeignKey('User.id'))
+    user_id = db.Column(db.Integer,db.ForeignKey('user.id'))
+
 
 

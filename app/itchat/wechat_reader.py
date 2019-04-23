@@ -7,6 +7,7 @@ from flask import Flask
 from ..model import db
 from datetime import datetime
 import re,random
+from time import sleep
 
 app = Flask(__name__)
 
@@ -19,16 +20,18 @@ thread = Thread()
 isLoggedIn = False
 welcome_list = []
 chatroom_list=[]
-
+rule={'ad_rule':[],'keyword_rule':[]}
 
 #后台检查是否登录
 def monitor_login(itchat,current_user,app):
     global isLoggedIn
+
     while 1:
         waiting_time = 0
         while not isLoggedIn:
             status = itchat.check_login()
             waiting_time += 1
+            print(status)
             print(waiting_time)
             if status == '200':
                 print ("status is 200!")
@@ -48,8 +51,33 @@ def monitor_login(itchat,current_user,app):
 
     print ("==== here status is ", status)
     itchat.check_login()
+    ready(app,itchat,current_user)
+    # init_result = itchat.web_init()
+    #
+    # wechat_init = Process_Wechat(db=db,app=app,itchat=itchat,current_user=current_user)
+    # wechat_init.process_web_init(init_result)
+    # # process_web_init(init_result,current_user.id,app)
+    # global chatroom_list
+    # chatroom_list = itchat.originInstance.storageClass.chatroomList
+    # wechat_init.process_chatroom(chatroom_list)
+    # wechat_init.process_wechatuser(chatroom_list)
+    # global welcome_list
+    # welcome_list = wechat_init.load_welcomeinfo()
+    #
+    # # 加载过滤条件
+    # ad_notifs, ad_uncensor, ad_keywords = wechat_init.load_adv_rule()
+    # rule['ad_rule'].extend([ad_notifs,ad_uncensor,ad_keywords])
+    # k_notifs, k_uncensor, k_keyword = wechat_init.load_keyword_rule()
+    # rule['keyword_rule'].extend([k_notifs,k_uncensor,k_keyword])
+    #
+    # itchat.show_mobile_login()
+    # # itchat.get_contact(True)
+    # itchat.start_receiving()
+    # itchat.run()
+
+def ready(app,itchat,current_user):
     init_result = itchat.web_init()
-    wechat_init = Process_Wechat(db=db,app=app,itchat=itchat,current_user=current_user)
+    wechat_init = Process_Wechat(db=db, app=app, itchat=itchat, current_user=current_user)
     wechat_init.process_web_init(init_result)
     # process_web_init(init_result,current_user.id,app)
     global chatroom_list
@@ -59,13 +87,12 @@ def monitor_login(itchat,current_user,app):
     global welcome_list
     welcome_list = wechat_init.load_welcomeinfo()
 
-
-    # #检测成员变化
-    # wechatdata = WechatBaseData(chatroom_list)
-    # welcome_thread = Timer(interval=5,function=monitor_members, args=(itchat, wechatdata))
-    # welcome_thread.start()
-
-
+    # 加载过滤条件
+    ad_notifs, ad_uncensor, ad_keywords = wechat_init.load_adv_rule()
+    rule['ad_rule'].extend([ad_notifs, ad_uncensor, ad_keywords])
+    k_notifs, k_uncensor, k_keyword = wechat_init.load_keyword_rule()
+    rule['keyword_rule'].extend([k_notifs, k_uncensor, k_keyword])
+    print('rule',rule)
 
     itchat.show_mobile_login()
     # itchat.get_contact(True)
@@ -83,26 +110,42 @@ def Qr2Img(uuid, status, qrcode):
 def get_qrimg(current_user,app):
     global thread
     global isLoggedIn
-    uuid = itchat.get_QRuuid()
-    itchat.get_QR(uuid=uuid, qrCallback=Qr2Img)
+    import threading
+
+    if not isLoggedIn:
+        #load_status 会开启一个线程
+        load_status = itchat.load_login_status('itchat.pkl')
+        print('threadalive1:', threading.active_count())
+        #服务器接受hotreload,开始数据的初始化
+        if load_status.get('BaseResponse').get('Ret') == 0:
+                isLoggedIn = True
+                thread = Thread(target=ready, args=(app, itchat, current_user))
+                thread.start()
+                itchat.dump_login_status('itchat.pkl')
+                print('threadalive2:', threading.active_count())
+                return None
+
+        uuid = itchat.get_QRuuid()
+        itchat.get_QR(uuid=uuid, qrCallback=Qr2Img)
+
+        if thread.is_alive():
+            return qr_img
+        if not thread.is_alive():
+            print('please Login')
+        thread = Thread(target=monitor_login, args=(itchat,current_user,app))
+        thread.start()
+        return qr_img
     #已经登陆微信
     if isLoggedIn:
         # wechat 掉线或者登出
         if not thread.is_alive():
+            print('threadalive3:', thread.is_alive())
             isLoggedIn = False
             thread = Thread(target=monitor_login, args=(itchat, current_user, app))
             thread.start()
             return qr_img
         return None
 
-    if thread.is_alive():
-        return qr_img
-    if not thread.is_alive():
-        print('please Login')
-    thread = Thread(target=monitor_login, args=(itchat,current_user,app))
-    thread.start()
-
-    return qr_img
 
 
 def check_isLoggedIn():
@@ -114,33 +157,61 @@ def check_isLoggedIn():
 from itchat.content import *
 @itchat.msg_register([TEXT],isGroupChat=True,isFriendChat=False)
 def receive_text(msg):
+    # 过滤函数
+    def msgfilter(ntf,uncs,kw):
+        if username not in uncs:
+            for k in kw:
+                rc = re.compile('.*?('+k+').*?')
+                print(rc)
+                res = rc.findall(msg.text)
+                print(res)
+                if res:
+                    for g in ntf:
+                        print(g)
+                        sleep(random.randrange(1,4))
+                        itchat.send('{}在{}群里说了:{}'.format(nickname,group_nickname,msg.text),toUserName=g)
+                    break
 
     global chatroom_list
     print(msg.text)
     print(msg)
-    group = msg.get('User').get('UserName')
-    username = msg.get('ActualUserName')
-    nickname = msg.get('ActualNickName')
-    info_nickname = msg.get('User').get('Self').get('NickName')
+    try:
+        group = msg.get('User').get('UserName')
+        group_nickname = msg.get('User').get('NickName')
+        username = msg.get('ActualUserName')
+        nickname = msg.get('ActualNickName')
+        info_nickname = msg.get('User').get('Self').get('NickName')
+    except AttributeError:
+        print("获取信息失败")
+        return
 
     text = msg.text
     create_time = msg.get('CreateTime')
     # 消息写库
     with app.app_context():
-        group_record = Wechat_group.query.filter_by(username=group).first()
-        info_record = Wechat_info.query.filter_by(nickname=info_nickname).first()
+        group_record = WechatGroup.query.filter_by(username=group).first()
+        info_record = WechatInfo.query.filter_by(nickname=info_nickname).first()
         if group_record:
             print(group_record.id)
             print(username)
-            user_record = Wechat_user.query.filter_by(wechat_group_id=group_record.id,username=username).first()
-            msg_record = Wechat_message(wechat_user_id=user_record.id,message=text,
+            user_record = WechatUser.query.filter_by(wechat_group_id=group_record.id,username=username).first()
+            msg_record = WechatMessage(wechat_user_id=user_record.id,message=text,
                                         createtime=datetime.fromtimestamp(create_time),
                                        wechat_info_id=info_record.id)
 
             db.session.add(msg_record)
             db.session.commit()
 
+    ad_notifs, ad_uncensor, ad_keywords =rule.get('ad_rule')
+    print(rule)
+    print('this is rule*************')
+    msgfilter(ad_notifs, ad_uncensor, ad_keywords)
+    k_notifs, k_uncensor, k_keyword = rule.get('keyword_rule')
+    msgfilter(k_notifs, k_uncensor, k_keyword)
 
+
+
+#入群自动欢迎
 @itchat.msg_register([NOTE],isGroupChat=True,isFriendChat=False)
 def receive_note(msg):
     text = msg.text
@@ -164,7 +235,7 @@ def receive_note(msg):
             friend =itchat.update_friend(userName=username)
 
     friend = itchat.search_friends(name=at_name)
-    print(itchat.search_friends(name=at_name))
+    print(friend)
     at_name = friend[0].get('NickName')
 
     global welcome_list
@@ -179,35 +250,3 @@ def receive_note(msg):
             return res
 
 
-
-
-# 设置入群自动欢迎
-# def monitor_members(itchat,wechatdata):
-#
-#     chatroom_data = wechatdata.room_member_count
-#     print('monitor_members',chatroom_data)
-#     for username,count in chatroom_data.items():
-#         room_info = itchat.update_chatroom(userName=username)
-#         membercount = room_info.get('MemberCount')
-#         print(count,'count')
-#         print(membercount,'membercount')
-#
-#         print(welcome_list)
-#         if int(membercount) > int(count):
-#             for usr,content in welcome_list:
-#                 if usr == username:
-#                     itchat.send(content,toUserName=username)
-#
-#         wechatdata.room_member_count[username]=membercount
-#
-#     #定时任务需要重复启动timer 达到定时循环
-#     welcome_thread = Timer(interval=10,function=monitor_members, args=(itchat, wechatdata))
-#     welcome_thread.start()
-#
-#
-# def monitor_adv():
-#     pass
-#
-# def monitor_keyword():
-#     pass
-#

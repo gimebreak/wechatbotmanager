@@ -1,5 +1,5 @@
 from app.model import *
-from app.model.User import Wechat_info,Wechat_group,Wechat_message,Wechat_user,Welcome_info
+from app.model.User import WechatInfo,WechatGroup,WechatMessage,WechatUser,WelcomeInfo
 from  logging import getLogger,INFO
 logger = getLogger(__name__)
 logger.setLevel(INFO)
@@ -18,11 +18,11 @@ class Process_Wechat(object):
         self.current_user = current_user
         self.db = db
         self.itchat = itchat
-        self.model_wechat_info = Wechat_info
-        self.model_wechat_group = Wechat_group
-        self.model_wechat_user = Wechat_user
-        self.model_wechat_message = Wechat_message
-        self.model_welcome_info = Welcome_info
+        self.model_wechat_info = WechatInfo
+        self.model_wechat_group = WechatGroup
+        self.model_wechat_user = WechatUser
+        self.model_wechat_message = WechatMessage
+        self.model_welcome_info = WelcomeInfo
         self.model_user =User
 
     def process_web_init(self,dict):

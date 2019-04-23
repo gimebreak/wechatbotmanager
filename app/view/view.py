@@ -6,9 +6,11 @@ from flask_admin import babel
 from flask_admin import AdminIndexView
 from ..itchat.wechat_reader import get_qrimg
 from . import bp
-from ..itchat.wechat_reader import check_isLoggedIn,app
+from ..itchat.wechat_reader import check_isLoggedIn,app,ready
 from copy import deepcopy
 from ..model.User import *
+import itchat
+import threading
 
 class WeChatAdminView(AdminIndexView):
 
@@ -31,8 +33,16 @@ class WeChatAdminView(AdminIndexView):
 
     @expose()
     def index(self):
+        print("thread number:",str(threading.active_count()))
         if not current_user.is_authenticated:
-            self.render(self._template)
+            return self.render(self._template)
+
+        try:
+            id = current_user.get_id()
+        except:
+            print('current_user fialed')
+            return self.render(self._template)
+        print("current_user",id)
         cur_user=deepcopy(current_user)
         QRimg = get_qrimg(cur_user,app)
         print(QRimg)
@@ -124,7 +134,7 @@ class GroupBasedView(sqla.ModelView):
 
         # 当前model 过滤条件为用户info
         for info in user_record:
-            group_records += Wechat_group.query.filter_by(wechat_info_id=info.id).all()
+            group_records += WechatGroup.query.filter_by(wechat_info_id=info.id).all()
 
         for group in group_records:
             res += query.from_self().filter_by(wechat_group_id=group.id).all()
@@ -188,11 +198,11 @@ class WeChatGroupView(BaseUserView):
     # form_columns = (Wechat_group.id,Wechat_group.users)
 
 class WechatMsgView(BaseUserView):
-    column_list = ('id','wechatuser','wechatuser.group.nickname','message','createtime')
+    column_list = ('id','wechat_user','wechat_user.group.nickname','message','createtime')
     column_labels = {
         'id':u'序号',
-        'wechatuser':u'微信名',
-        'wechatuser.group.nickname': '所在群',
+        'wechat_user':u'微信名',
+        'wechat_user.group.nickname': '所在群',
         'message':'消息内容',
         'createtime':'创建时间',
 
@@ -218,13 +228,53 @@ class WechatWelcomeInfoView(GroupBasedView):
         'enabled':u'启动'
     }
 
+class AdNotificationGroupView(GroupBasedView):
+    column_list = ('id','group')
+    column_labels = {
+        'id':u'序号',
+        'group':u'通知群'
+    }
 
-    id = db.Column(db.Integer,primary_key=True)
-    wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
-    type = db.Column(db.SMALLINT,comment='1:message,0:pic_content')
-    content = db.Column(db.Text)
-    pic_url = db.Column(db.Text)
-    enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
+class AdWhiteListView(GroupBasedView):
+    column_list = ('id','wechat_user')
+    column_labels = {
+        'id':u'序号',
+        'wechat_user':'微信用户'
+    }
+
+class AdvBlackList(sqla.ModelView):
+    column_list = ('id','keyword')
+    column_labels = {
+        'id':u'序号',
+        'keyword':'关键字'
+    }
+
+
+class KWNotificationGroupView(GroupBasedView):
+    column_list = ('id', 'group')
+    column_labels = {
+        'id': u'序号',
+        'group': u'通知群'
+    }
+
+
+class KWWhiteListView(GroupBasedView):
+    column_list = ('id','wechat_user')
+    column_labels = {
+        'id': u'序号',
+        'wechat_user': '微信用户'
+    }
+
+
+class KWBlackList(sqla.ModelView):
+    column_list = ('id', 'keyword')
+    column_labels = {
+        'id': u'序号',
+        'keyword': '关键字'
+    }
+
+
+#
 
 
 @bp.route('/')

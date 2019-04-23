@@ -23,13 +23,19 @@ def create_app(config):
         base_template='my_master.html',
         template_mode='bootstrap3',
     )
-
+    #
     admin.add_view(SuperUserView(Role, db.session, name='权限管理',category='设置'))
     admin.add_view(UserModelView(User, db.session, name='用户管理',category='设置'))
-    admin.add_view(WeChatGroupView(Wechat_group, db.session, name='微信群'))
-    admin.add_view(WechatMsgView(Wechat_message,db.session,name='微信群消息'))
-    admin.add_view(WechatUserView(Wechat_user,db.session,name='微信群用户'))
-    admin.add_view(WechatWelcomeInfoView(Welcome_info,db.session,name='入群欢迎设置'))
+    admin.add_view(WeChatGroupView(WechatGroup, db.session, name='微信群'))
+    admin.add_view(WechatMsgView(WechatMessage,db.session,name='微信群消息'))
+    admin.add_view(WechatUserView(WechatUser,db.session,name='微信群用户'))
+    admin.add_view(WechatWelcomeInfoView(WelcomeInfo,db.session,name='入群欢迎设置'))
+    admin.add_view(AdNotificationGroupView(AdvNotificationGroup, db.session, name='广告通知群',category='消息过滤设置'))
+    admin.add_view(AdWhiteListView(AdvWhitelistUser, db.session, name='广告白名单用户',category='消息过滤设置'))
+    admin.add_view(AdvBlackList(AdvBlacklist, db.session, name='广告关键词',category='消息过滤设置'))
+    admin.add_view(KWNotificationGroupView(KeywordNotificationGroup, db.session, name='关键词通知群',category='消息过滤设置'))
+    admin.add_view(KWWhiteListView(KeywordWhitelistUser, db.session, name='关键词白名单用户',category='消息过滤设置'))
+    admin.add_view(KWBlackList(KeywordBlacklist, db.session, name='关键词黑名单',category='消息过滤设置'))
     admin.init_app(app)
 
     @security.context_processor
