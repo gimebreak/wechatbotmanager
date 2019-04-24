@@ -1,7 +1,7 @@
 from threading import Thread,Timer
 import itchat
 import base64
-from ..model.User import *
+from ..model.model import *
 from .tool import Process_Wechat,WechatBaseData
 from flask import Flask
 from ..model import db

@@ -4,30 +4,27 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-10 col-sm-offset-1">
-            <h1>Flask-Admin example</h1>
+            <h1>微信群管理</h1>
 
             {% if current_user.is_authenticated %}
 
-            <p class="lead">
-                Authentication
-            </p>
-                  {% if qrimg %}
-                {{ qrimg | safe }}
+
+                {% if qrimg %}
+                    <p class="lead">
+                        请扫码
+                    </p>
+                    {{ qrimg | safe }}
                 {% endif %}
             {% endif %}
             {% if not current_user.is_authenticated %}
-            <p>You can register as a regular user, or log in as a superuser with the following credentials:
-            <ul>
-                <li>email: <b>admin</b></li>
-                <li>password: <b>admin</b></li>
-            </ul>
+            <p>如果非本站用户，请在下方注册
             <p>
-                <a class="btn btn-primary" href="{{ url_for('security.login') }}">login</a> <a class="btn btn-default" href="{{ url_for('security.register') }}">register</a>
+                <a class="btn btn-primary" href="{{ url_for('security.login') }}">登陆</a> <a class="btn btn-default" href="{{ url_for('security.register') }}">注册</a>
             </p>
             {% endif %}
-            <p>
-                <a class="btn btn-primary" href="/"><i class="glyphicon glyphicon-chevron-left"></i> Back</a>
-            </p>
+{#            <p>#}
+{#                <a class="btn btn-primary" href="/"><i class="glyphicon glyphicon-chevron-left"></i> Back</a>#}
+{#            </p>#}
         </div>
     </div>
 </div>
@@ -38,7 +35,6 @@
                type:'get',
                success:function(data){
                         if(data.isLoggedIn === true){
-                            console.log(data.isLoggedIn);
                             clearInterval(check);
                             $('#qrimg').after('<h2>已登录</h2>');
 

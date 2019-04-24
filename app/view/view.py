@@ -4,13 +4,11 @@ from flask_security import current_user
 from flask_admin.base import expose
 from flask_admin import babel
 from flask_admin import AdminIndexView
-from ..itchat.itmain import get_qrimg
 from . import bp
-from ..itchat.itmain import check_isLoggedIn,app,ready
 from copy import deepcopy
-from ..model.User import *
-import itchat
-import threading
+from ..model.model import *
+from ..itchat.itchatmain import app
+
 from app.itchat.itchatmain import process
 
 class WeChatAdminView(AdminIndexView):
@@ -54,7 +52,26 @@ class WeChatAdminView(AdminIndexView):
         return self.render(self._template,qrimg=img_element)
 
 
+class BaseView(sqla.ModelView):
 
+    def is_accessible(self):
+        return (current_user.is_active and
+                current_user.is_authenticated and
+                current_user.has_role('user')
+        )
+
+
+    def _handle_view(self, name, **kwargs):
+        """
+        Override builtin _handle_view in order to redirect users when a view is not accessible.
+        """
+        if not self.is_accessible():
+            if current_user.is_authenticated:
+                # permission denied
+                abort(403)
+            else:
+                # login
+                return redirect(url_for('security.login', next=request.url))
 
 
 class BaseUserView(sqla.ModelView):
@@ -83,10 +100,16 @@ class BaseUserView(sqla.ModelView):
                 # login
                 return redirect(url_for('security.login', next=request.url))
 
+
     # 用户只能查看数据库中自己的微信信息
     def get_list(self, page, sort_column, sort_desc, search, filters,
                  execute=True, page_size=None):
-
+        # print(filters)
+        # print('this is filter')
+        #
+        # for i in current_user.infos:
+        #     filters.append((5, 'Wechat User Id', str(i.id)))
+        # print(filter)
         count,query = super(BaseUserView,self).get_list(page, sort_column, sort_desc, search, filters,
                  execute=False, page_size=None)
         # 当前用户的infos
@@ -97,9 +120,6 @@ class BaseUserView(sqla.ModelView):
         for info in user_record:
             res += query.from_self().filter_by(wechat_info_id=info.id).all()
         query = res
-
-        print('get_list')
-        print(count)
 
         return count,query
 
@@ -143,9 +163,6 @@ class GroupBasedView(sqla.ModelView):
 
         return count,query
 
-
-
-
 class SuperUserView(sqla.ModelView):
 
     def is_accessible(self):
@@ -180,7 +197,7 @@ class UserModelView(SuperUserView):
 
 
 class WeChatGroupView(BaseUserView):
-    column_list = ('id','info', 'username', 'nickname')
+    column_list = ('id','info', 'username', 'nickname','users')
     column_labels = {
         'id': u'序号',
         'username': u'群名称',
@@ -193,6 +210,13 @@ class WeChatGroupView(BaseUserView):
         'welcome_infos':'欢迎语',
         'auto_replies':'自动回复',
         'timing_group_sending':'定时发送',
+    }
+
+    form_ajax_refs = {
+        'users': {
+            'fields': ('id', 'nickname'),
+            'page_size': 10
+        }
     }
     #内联模型: 只有one2many才可进行内联编辑
     # inline_models = (Wechat_user,)
@@ -208,7 +232,8 @@ class WechatMsgView(BaseUserView):
         'createtime':'创建时间',
 
     }
-
+    column_sortable_list =('createtime',)
+    column_filters = ('wechat_user_id',)
 
 class WechatUserView(BaseUserView):
     column_list = ('id', 'nickname','group', )
@@ -217,6 +242,7 @@ class WechatUserView(BaseUserView):
         'nickname': u'微信名',
         'group':u'所属群',
     }
+
 
 class WechatWelcomeInfoView(GroupBasedView):
     column_list = ('id', 'group','type','content','pic_url','enabled' )
@@ -229,6 +255,13 @@ class WechatWelcomeInfoView(GroupBasedView):
         'enabled':u'启动'
     }
 
+class FavorateMsgView(BaseView):
+    column_list = ('id','message')
+    column_labels = {
+        'id':u'序号',
+        'message':u'消息'
+    }
+
 class AdNotificationGroupView(GroupBasedView):
     column_list = ('id','group')
     column_labels = {
@@ -236,14 +269,14 @@ class AdNotificationGroupView(GroupBasedView):
         'group':u'通知群'
     }
 
-class AdWhiteListView(sqla.ModelView):
+class AdWhiteListView(BaseView):
     column_list = ('id','wechat_user')
     column_labels = {
         'id':u'序号',
         'wechat_user':'微信用户'
     }
 
-class AdvBlackList(sqla.ModelView):
+class AdvBlackList(BaseView):
     column_list = ('id','keyword')
     column_labels = {
         'id':u'序号',
@@ -259,7 +292,7 @@ class KWNotificationGroupView(GroupBasedView):
     }
 
 
-class KWWhiteListView(sqla.ModelView):
+class KWWhiteListView(BaseView):
     column_list = ('id','wechat_user')
     column_labels = {
         'id': u'序号',
@@ -267,7 +300,7 @@ class KWWhiteListView(sqla.ModelView):
     }
 
 
-class KWBlackList(sqla.ModelView):
+class KWBlackList(BaseView):
     column_list = ('id', 'keyword')
     column_labels = {
         'id': u'序号',
@@ -298,3 +331,8 @@ def check_login():
     return jsonify(isLoggedIn=process.isLoggedIn)
 
 
+from flask_login.signals import user_logged_in
+@user_logged_in.connect_via(app)
+def user_loggin(sender,user):
+    #可以直接操作app上下文
+    print(WechatMessage.query.get(1))

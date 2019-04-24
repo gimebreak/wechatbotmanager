@@ -1,5 +1,5 @@
 from app.model import *
-from app.model.User import WechatInfo,WechatGroup,WechatMessage,WechatUser,WelcomeInfo
+from app.model.model import WechatInfo,WechatGroup,WechatMessage,WechatUser,WelcomeInfo
 from  logging import getLogger,INFO
 logger = getLogger(__name__)
 logger.setLevel(INFO)

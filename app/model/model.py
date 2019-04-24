@@ -128,6 +128,7 @@ class WechatUser(db.Model):
         return self.nickname
 #
 #
+
 class WelcomeInfo(db.Model):
 
     id = db.Column(db.Integer,primary_key=True)
@@ -153,7 +154,6 @@ class WechatMessage(db.Model):
     createtime = db.Column(db.DateTime())
     wechat_user_id = db.Column(db.Integer, db.ForeignKey('wechat_user.id'))
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
-
     favorates = db.relationship('FavorateMessage',backref=db.backref('message'))
 
 class ImmediateGroupSending(db.Model):

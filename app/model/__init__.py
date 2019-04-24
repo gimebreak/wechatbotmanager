@@ -1,4 +1,4 @@
-from .User import  User,Role,db
+from .model import  User,Role,db
 from flask_security import SQLAlchemyUserDatastore
 
 class SqlAlchemyUserQueryStore(SQLAlchemyUserDatastore):
