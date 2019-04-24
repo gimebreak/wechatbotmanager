@@ -209,7 +209,24 @@ class Process_Wechat(object):
 
         return notifs,uncensor,keywords
 
+    def load_auto_reply(self):
 
+        def load_fields(user_record):
+            res = []
+            infos = user_record.infos
+            for i in infos:
+                groups = i.groups
+                for g in groups:
+                    replies = g.auto_replies
+                    for r in replies:
+                        res.append((r.type,r.group,r.keyword,r.reply_content,r.enabled))
+            return res
+
+        with self.app.app_context():
+            user_record = User.query.get(self.current_user.get_id())
+            auto_reply_rules = load_fields(user_record)
+
+        return auto_reply_rules
 
 class WechatBaseData(object):
 

@@ -4,13 +4,14 @@ from flask_security import current_user
 from flask_admin.base import expose
 from flask_admin import babel
 from flask_admin import AdminIndexView
-from ..itchat.wechat_reader import get_qrimg
+from ..itchat.itmain import get_qrimg
 from . import bp
-from ..itchat.wechat_reader import check_isLoggedIn,app,ready
+from ..itchat.itmain import check_isLoggedIn,app,ready
 from copy import deepcopy
 from ..model.User import *
 import itchat
 import threading
+from app.itchat.itchatmain import process
 
 class WeChatAdminView(AdminIndexView):
 
@@ -33,7 +34,6 @@ class WeChatAdminView(AdminIndexView):
 
     @expose()
     def index(self):
-        print("thread number:",str(threading.active_count()))
         if not current_user.is_authenticated:
             return self.render(self._template)
 
@@ -43,10 +43,11 @@ class WeChatAdminView(AdminIndexView):
             print('current_user fialed')
             return self.render(self._template)
         print("current_user",id)
-        cur_user=deepcopy(current_user)
-        QRimg = get_qrimg(cur_user,app)
+        # cur_user=deepcopy(current_user)
+        # QRimg = get_qrimg(cur_user,app)
+        QRimg = process(deepcopy(current_user))
         print(QRimg)
-        if QRimg ==None:
+        if QRimg == None:
             return self.render(self._template)
         img_element = '<img id="qrimg" alt="Base64 encoded image" style="text-align: center" src="data:image/png;base64,{}"/>'.format(QRimg)
 
@@ -235,7 +236,7 @@ class AdNotificationGroupView(GroupBasedView):
         'group':u'通知群'
     }
 
-class AdWhiteListView(GroupBasedView):
+class AdWhiteListView(sqla.ModelView):
     column_list = ('id','wechat_user')
     column_labels = {
         'id':u'序号',
@@ -258,7 +259,7 @@ class KWNotificationGroupView(GroupBasedView):
     }
 
 
-class KWWhiteListView(GroupBasedView):
+class KWWhiteListView(sqla.ModelView):
     column_list = ('id','wechat_user')
     column_labels = {
         'id': u'序号',
@@ -273,6 +274,16 @@ class KWBlackList(sqla.ModelView):
         'keyword': '关键字'
     }
 
+class AutoReplyView(GroupBasedView):
+    column_list = ('id','type','group','keyword','reply_content','enabled')
+    column_labels = {
+        'id': u'序号',
+        'type':u'发送方式',
+        'keyword': '关键字',
+        'reply_content':'回复内容',
+        'enabled':'是否启动'
+    }
+
 
 #
 
@@ -284,6 +295,6 @@ def index():
 
 @bp.route('check_login/')
 def check_login():
-    return jsonify(isLoggedIn=check_isLoggedIn())
+    return jsonify(isLoggedIn=process.isLoggedIn)
 
 

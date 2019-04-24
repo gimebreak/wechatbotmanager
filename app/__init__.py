@@ -7,7 +7,7 @@ from flask_admin import Admin
 from flask_babelex import Babel
 from flask_security import Security
 from .view import bp
-from .itchat.wechat_reader import app
+from .itchat.itchatmain import app
 from .model.User import *
 
 def create_app(config):
@@ -30,6 +30,7 @@ def create_app(config):
     admin.add_view(WechatMsgView(WechatMessage,db.session,name='微信群消息'))
     admin.add_view(WechatUserView(WechatUser,db.session,name='微信群用户'))
     admin.add_view(WechatWelcomeInfoView(WelcomeInfo,db.session,name='入群欢迎设置'))
+    admin.add_view(AutoReplyView(AutoReply,db.session,name='自动回复'))
     admin.add_view(AdNotificationGroupView(AdvNotificationGroup, db.session, name='广告通知群',category='消息过滤设置'))
     admin.add_view(AdWhiteListView(AdvWhitelistUser, db.session, name='广告白名单用户',category='消息过滤设置'))
     admin.add_view(AdvBlackList(AdvBlacklist, db.session, name='广告关键词',category='消息过滤设置'))

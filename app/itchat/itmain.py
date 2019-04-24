@@ -49,6 +49,7 @@ def monitor_login(itchat,current_user,app):
             print ("已经确认登陆了")
             break
 
+
     print ("==== here status is ", status)
     itchat.check_login()
     ready(app,itchat,current_user)

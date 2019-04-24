@@ -8,6 +8,7 @@ class DevelopmentConfig(object):
     DATABASE_FILE = 'sample_db.sqlite'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DATABASE_FILE
     SQLALCHEMY_ECHO = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Flask-Security config
     SECURITY_URL_PREFIX = "/admin"
@@ -26,7 +27,6 @@ class DevelopmentConfig(object):
     # Flask-Security features
     SECURITY_REGISTERABLE = True
     SECURITY_SEND_REGISTER_EMAIL = False
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # internationalization
     BABEL_DEFAULT_LOCALE = 'zh_hans_CN'
