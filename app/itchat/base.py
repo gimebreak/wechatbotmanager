@@ -185,20 +185,25 @@ class BaseProcess(object):
                     self.db.session.commit()
 
             def _get_newcomer(msg,at_name):
+                usernames = []
+                nicknames = []
+                remarknames = []
                 groupname = msg.get('FromUserName')
                 g = itchat.update_chatroom(userName=groupname)
-
-                try:
-                    for m in g.get('MemberList'):
-                        m_username = m.get('UserName')
-                        m_nickname = m.get('NickName')
-                        m_remarkname = m.get('DisplayName')
-                        if m_nickname == at_name:
-                            return m_username,m_nickname,m_remarkname
-                except:
-                    logger.info('获取新人:{} 的信息失败失败'.format(at_name))
-                    return '','',''
-                return '','',''
+                for n in at_name:
+                    try:
+                        for m in g.get('MemberList'):
+                            m_username = m.get('UserName')
+                            m_nickname = m.get('NickName')
+                            m_remarkname = m.get('DisplayName')
+                            if m_nickname == n:
+                                usernames.append(m_username)
+                                nicknames.append(m_nickname)
+                                remarknames.append(m_remarkname)
+                    except:
+                        logger.info('获取新人:{} 的信息失败失败'.format(n))
+                        continue
+                return usernames,nicknames,remarknames
 
             def _get_name(msg):
                 text = msg.text
@@ -209,18 +214,21 @@ class BaseProcess(object):
                 if reqr.search(text):
                     if reqr.findall(text)[0][0] == '你':
                         parent = parent_username
-                        at_name = reqr.search(text).group(2)
+                        at_name = [reqr.search(text).group(2)]
                     else:
                         parent = reqr.search(text).group(1)
-                        at_name = reqr.search(text).group(2)
+                        at_name = [reqr.search(text).group(2)]
                     return parent,at_name
                 elif retog.search(text):
                     if retog.findall(text)[0][0] == '你':
                         parent = parent_username
                         at_name = retog.search(text).group(2)
+                        at_name = at_name.split('、')
                     else:
                         parent = retog.search(text).group(1)
                         at_name = retog.search(text).group(2)
+                        at_name = at_name.split('、')
+                        #说明同时加入两个人
                     return parent, at_name
                 else:
                     return None,None
@@ -232,21 +240,42 @@ class BaseProcess(object):
                 return
 
             username, at_name, remarkname = _get_newcomer(msg,at_name)
+            print(at_name,'after_get_newcomer')
+            print(username)
+            print(remarkname)
             group_name = msg.get('FromUserName')
 
-            if at_name !='':
-                _add_parent(parent, group_name,username,at_name,remarkname)
+            if at_name !=[]:
+                for un,an,rm in zip(username,at_name,remarkname):
+                    _add_parent(parent, group_name,un,an,rm)
 
-            # 随机发送欢迎消息
-            filtered_list = list(filter(lambda x: x[0] == group_name, self.welcome_list))
-            print(filtered_list)
-            if len(filtered_list) > 1:
-                random.shuffle(filtered_list)
-            for username, content in filtered_list:
-                if username == group_name:
-                    res = '@' + at_name + '  ' + content
-                    return res
+            def _send_welcome(welcome_list,at_names,usernames):
 
+                # 随机发送欢迎消息
+                filtered_list = list(filter(lambda x: x[0] == group_name, welcome_list))
+                print(filtered_list)
+                if len(filtered_list) > 1:
+                    random.shuffle(filtered_list)
+                print(at_name)
+
+                #查询真实nickname,非displayname,才能真正@一个人
+                at_name_list=[]
+                combine_names = zip(at_name,usernames)
+                for an,un in combine_names:
+                    user_info = itchat.update_friend(un)
+                    nickname = user_info.get('NickName')
+                    if not nickname:
+                        nickname =an
+                    at_name_list.append('@'+nickname+' ')
+
+                print(at_name_list)
+                for username, content in filtered_list:
+                    if username == group_name:
+                        res = ''.join(at_name_list)+'  ' + content
+                        sleep(random.randrange(3,5))
+                        return res
+            res = _send_welcome(self.welcome_list,at_name,username)
+            return res
         @itchat.msg_register([TEXT], isGroupChat=True, isFriendChat=False)
         def receive_text(msg):
             # 过滤函数
