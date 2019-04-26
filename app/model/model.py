@@ -1,7 +1,14 @@
 from flask_security import UserMixin,RoleMixin
 from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SignallingSession
 
-db=SQLAlchemy()
+class MySQLAlchemy(SQLAlchemy):
+    def create_session(self, options):
+        options['autoflush'] = False
+        return SignallingSession(self, **options)
+
+
+db=SQLAlchemy(use_native_unicode='utf8',session_options={'autoflush':False})
 
 roles_users = db.Table(
     'roles_users',

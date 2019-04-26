@@ -139,7 +139,9 @@ class Process_Wechat(object):
                 chatroom_username = chatroom.get('UserName')
                 chatroom_nickname = chatroom.get('NickName')
                 #先取群nickname,查库返回query对象,
+                print(chatroom_nickname)
                 wechat_group_id = self.model_wechat_group.query.filter_by(nickname=chatroom_nickname,wechat_info_id=self.wechat_info_id).first()
+                print(wechat_group_id)
                 chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
                 memberlist = chatroom_info.get('MemberList')
                 for member in memberlist:

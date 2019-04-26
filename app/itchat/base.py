@@ -10,7 +10,6 @@ from threading import Thread
 from itchat.content import *
 
 
-
 def _hotload_address():
     m1 = md5()
     m1.update(str(time()).encode('utf8'))
@@ -307,6 +306,8 @@ class BaseProcess(object):
 
             print(msg.text)
             print(msg)
+            print(itchat.originInstance.loginInfo)
+
             try:
                 group = msg.get('User').get('UserName')
                 group_nickname = msg.get('User').get('NickName')
@@ -314,7 +315,16 @@ class BaseProcess(object):
                 nickname = msg.get('ActualNickName')
                 info_nickname = msg.get('User').get('Self').get('NickName')
             except AttributeError:
-                print("获取信息失败")
+
+                # 有问题！！！！！
+                groupname = msg.get("User").get('UserName')
+                chatroom = itchat.update_chatroom(groupname)
+                member_list = chatroom.get('MemberList')
+                self.wechat_init.fix_group([chatroom])
+                self.wechat_init.fix_user([chatroom])
+                info_nickname = itchat.originInstance.loginInfo.get('User').get('NickName')
+
+                logger.info("微信API返回信息不足，获取关键信息失败")
                 return
 
             text = msg.text
