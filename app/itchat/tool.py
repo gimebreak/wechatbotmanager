@@ -1,12 +1,17 @@
 from app.model import *
 from app.model.model import WechatInfo,WechatGroup,WechatMessage,WechatUser,WelcomeInfo
-from  logging import getLogger,INFO
-logger = getLogger(__name__)
-logger.setLevel(INFO)
+
+
+import logging
+logging.basicConfig(level=logging.INFO,format='%(asctime)s-%(name)s-%(filename)s-%(levelname)s-%(message)s')
+logger = logging.getLogger('flask.app')
 
 
 
 class Process_Wechat(object):
+
+    wechat_info_id =0
+
     def __init__(self,db,app,current_user,itchat):
         '''
         :param db:database handler
@@ -23,7 +28,7 @@ class Process_Wechat(object):
         self.model_wechat_user = WechatUser
         self.model_wechat_message = WechatMessage
         self.model_welcome_info = WelcomeInfo
-        self.model_user =User
+        self.model_user = User
 
     def process_web_init(self,dict):
         '''

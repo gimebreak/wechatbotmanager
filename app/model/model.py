@@ -114,7 +114,9 @@ class WechatUser(db.Model):
     nickname = db.Column(db.String(255), comment="昵称")
     remarkname = db.Column(db.String(255),comment="备注名")
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
+    parent_id = db.Column(db.Integer,db.ForeignKey('wechat_user.id'))
 
+    childrens =db.relationship('WechatUser',backref=db.backref('parent',remote_side=[id]))
     msgs = db.relationship('WechatMessage',
                            backref=db.backref('wechat_user'))
     adv_whitelist_users = db.relationship('AdvWhitelistUser',
