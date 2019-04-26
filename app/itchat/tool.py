@@ -119,9 +119,11 @@ class Process_Wechat(object):
                 group=self.model_wechat_group(wechat_info_id=wechat_group_wechat_info_id.id,username=username,
                                               nickname=nickname,remarkname=remarkname,
                                               membercount=membercount,isowner=isowner)
+                print(group)
                 self.db.session.add(group)
 
             try:
+                print('成功写入')
                 self.db.session.commit()
             except Exception as e:
                 logger.info('wechat_group提交失败')
@@ -160,6 +162,7 @@ class Process_Wechat(object):
                     self.db.session.add(we_user)
 
                 try:
+                    print('成功写入')
                     self.db.session.commit()
                 except Exception as e:
                     print(e)
@@ -232,6 +235,77 @@ class Process_Wechat(object):
             auto_reply_rules = load_fields(user_record)
 
         return auto_reply_rules
+
+    # 如果判定开机未加载的群中发布了消息，则调用fix_group,fix_user 在库中添加用户和群。
+    # 管理员新建群拉取用户，由于微信群更名Itchat无法返回有效结果，因此会造成数据冗余。
+    def fix_group(self,chatroom_list):
+        with self.app.app_context():
+            wechat_group_wechat_info_id = self.model_wechat_info.query.get(self.wechat_info_id)
+
+            for chatroom in chatroom_list:
+                print(chatroom_list)
+                nickname = chatroom.get('NickName')
+                username = chatroom.get('UserName')
+                remarkname = chatroom.get('RemarkName')
+                membercount = chatroom.get('MemberCount')
+                isowner = True if chatroom.get('IsOwner') == '1' else False
+                print(nickname,username,remarkname,membercount,isowner)
+                # 判断是否存在，存在则更新,注意wechat_info_id 加入筛选条件
+                group_record = self.model_wechat_group.query.filter_by(username=username,
+                                                                       wechat_info_id=self.wechat_info_id).first()
+                if group_record:
+                    group_record.username, group_record.remarkname, group_record.membercount = username, remarkname, membercount
+                    self.db.session.add(group_record)
+                    continue
+                group = self.model_wechat_group(wechat_info_id=wechat_group_wechat_info_id.id, username=username,
+                                                nickname=nickname, remarkname=remarkname,
+                                                membercount=membercount, isowner=isowner)
+                print(group)
+                self.db.session.add(group)
+
+            try:
+                print('成功写入')
+                self.db.session.commit()
+            except Exception as e:
+                logger.info('wechat_group提交失败')
+
+    def fix_user(self, chatroom_list):
+        with self.app.app_context():
+            for chatroom in chatroom_list:
+                chatroom_username = chatroom.get('UserName')
+                chatroom_nickname = chatroom.get('NickName')
+                # 先取群nickname,查库返回query对象,
+                wechat_group_id = self.model_wechat_group.query.filter_by(username=chatroom_username).first()
+                print(wechat_group_id,'wechatgroupid')
+                chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
+                memberlist = chatroom_info.get('MemberList')
+                print(memberlist)
+                for member in memberlist:
+                    username = member.get('UserName')
+                    nickname = member.get('NickName')
+                    displayname = member.get('DisplayName')
+                    print(username,nickname,displayname)
+                    # 判断该用户名是否存在，存在则更新
+                    weuser_record = self.model_wechat_user.query.filter_by(username=username,
+                                                                           wechat_group_id=wechat_group_id.id).first()
+
+                    if weuser_record:
+                        weuser_record.username, weuser_record.remarkname = username, displayname
+                        self.db.session.add(weuser_record)
+                        continue
+
+                    we_user = self.model_wechat_user(username=username, nickname=nickname,
+                                                     remarkname=displayname, wechat_group_id=wechat_group_id.id,
+                                                     wechat_info_id=self.wechat_info_id)
+                    print(we_user)
+                    self.db.session.add(we_user)
+
+                try:
+                    print('成功写入')
+                    self.db.session.commit()
+                except Exception as e:
+                    print(e)
+                    logger.info('wechat_user提交失败')
 
 class WechatBaseData(object):
 

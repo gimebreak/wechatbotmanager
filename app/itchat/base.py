@@ -50,7 +50,7 @@ class BaseProcess(object):
         def _entry(self,current_user,app):
             if not self.isLoggedIn:
                 load_status = self.itchat.load_login_status('data/itchat{}.pk1'.format(current_user.get_id()))
-                app.logger.info(load_status)
+                logger.info(load_status)
 
                 if load_status.get('BaseResponse').get('Ret') == 0:
                     logger.info('{}hotload success'.format(current_user.name))
@@ -149,27 +149,32 @@ class BaseProcess(object):
 
     def register(self):
 
+        # @itchat.msg_register(INCOME_MSG)
+        # def income(msg):
+        #     print(msg)
+
         @itchat.msg_register([NOTE], isGroupChat=True, isFriendChat=False)
         def receive_note(msg):
-
-            def _add_parent(parent,group,username,nickname,remarkname):
+            print(msg.text)
+            print(msg)
+            def _add_parent(parent,groupname,username,nickname,remarkname):
                 with self.app.app_context():
-                    group = WechatGroup.query.filter_by(username=group).first()
+                    group = WechatGroup.query.filter_by(username=groupname).first()
                     # 若没在登入时加载，则重新加载该群
                     try:
                         if not group:
-                            chatroom = itchat.update_chatroom(group)
-                            self.wechat_init.process_chatroom([chatroom])
+                            chatroom = itchat.update_chatroom(groupname)
+                            chatroom = itchat.search_chatrooms(userName=groupname)
+                            self.wechat_init.fix_group([chatroom])
+                            self.wechat_init.fix_user([chatroom])
                             #再次加载group
-                            group = WechatGroup.query.filter_by(username=group).first()
+                            group = WechatGroup.query.filter_by(username=groupname).first()
+
                     except Exception as e:
                         logger.error('群信息未加载成功')
 
-                    print(parent.strip('"'))
                     parent = WechatUser.query.filter_by(nickname=parent.strip('"'),wechat_group_id=group.id).first()
-                    print(parent,'pppppparent object')
                     user = WechatUser.query.filter_by(wechat_group_id=group.id,username=username).first()
-                    print(user)
                     if user:
                         weuser=user
                         weuser.parent_id=parent.id
@@ -182,19 +187,18 @@ class BaseProcess(object):
             def _get_newcomer(msg,at_name):
                 groupname = msg.get('FromUserName')
                 g = itchat.update_chatroom(userName=groupname)
-                m_username=''
-                m_nickname=''
-                m_remarkname=''
+
                 try:
                     for m in g.get('MemberList'):
                         m_username = m.get('UserName')
                         m_nickname = m.get('NickName')
                         m_remarkname = m.get('DisplayName')
                         if m_nickname == at_name:
-                            break
+                            return m_username,m_nickname,m_remarkname
                 except:
+                    logger.info('获取新人:{} 的信息失败失败'.format(at_name))
                     return '','',''
-                return m_username,m_nickname,m_remarkname
+                return '','',''
 
             def _get_name(msg):
                 text = msg.text
@@ -222,13 +226,12 @@ class BaseProcess(object):
                     return None,None
 
             parent,at_name = _get_name(msg)
+            print(at_name,'at_name')
 
             if not at_name:
                 return
 
             username, at_name, remarkname = _get_newcomer(msg,at_name)
-
-
             group_name = msg.get('FromUserName')
 
             if at_name !='':
