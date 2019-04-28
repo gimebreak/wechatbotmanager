@@ -9,6 +9,7 @@ from copy import deepcopy
 from ..model.model import *
 from ..itchat.itchatmain import app
 from  ..itchat.base import logger
+from app.itchat.cron import last_week,last_month,the_week
 
 from app.itchat.itchatmain import process
 
@@ -327,7 +328,74 @@ class AutoReplyView(SuperUserView):
     }
 
 
-#
+from flask_admin.base import BaseView
+
+
+class TheWeekView(BaseView):
+    #本周
+    @expose()
+    def last_week(self):
+        start,end = the_week()
+        groups = WechatGroup.query.filter_by().all()
+        msg_num_dict = {}
+        for g in groups:
+            msg_count = 0
+            users = g.users
+            for u in users:
+                msgs = u.msgs
+                for m in msgs:
+                    createtime = m.createtime
+                    if(createtime>start and createtime<end):
+                        msg_count+=1
+            msg_num_dict.update({g.nickname:msg_count})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+        # print(render_args)
+        return self.render('ranklist_master.html',ranklist=render_args)
+
+
+class LastWeekView(BaseView):
+    #本周
+    @expose()
+    def last_week(self):
+        start,end = last_week()
+        groups = WechatGroup.query.filter_by().all()
+        msg_num_dict = {}
+        for g in groups:
+            msg_count = 0
+            users = g.users
+            for u in users:
+                msgs = u.msgs
+                for m in msgs:
+                    createtime = m.createtime
+                    if(createtime>start and createtime<end):
+                        msg_count+=1
+            msg_num_dict.update({g.nickname:msg_count})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+        # print(render_args)
+        return self.render('ranklist_master.html',ranklist=render_args)
+
+class LastMonthView(BaseView):
+    #本周
+    @expose()
+    def last_month(self):
+        start,end = last_month()
+        groups = WechatGroup.query.filter_by().all()
+        msg_num_dict = {}
+        for g in groups:
+            msg_count = 0
+            users = g.users
+            for u in users:
+                msgs = u.msgs
+                for m in msgs:
+                    createtime = m.createtime
+                    if(createtime>start and createtime<end):
+                        msg_count+=1
+            msg_num_dict.update({g.nickname:msg_count})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+        # print(render_args)
+        return self.render('ranklist_master.html',ranklist=render_args)
+
+
 
 
 @bp.route('/')

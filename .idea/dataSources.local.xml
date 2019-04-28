@@ -20,5 +20,14 @@
       <user-name>root</user-name>
       <introspection-schemas>*:jiajiawechat</introspection-schemas>
     </data-source>
+    <data-source name="sample_db.sqlite" uuid="f21a2f72-0f04-4184-bd52-3d5145b8a01d">
+      <database-info product="SQLite" version="3.25.1" jdbc-version="2.1" driver-name="SQLite JDBC" driver-version="3.25.1">
+        <identifier-quote-string>&quot;</identifier-quote-string>
+      </database-info>
+      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <secret-storage>master_key</secret-storage>
+      <auth-required>false</auth-required>
+      <introspection-schemas>*:main</introspection-schemas>
+    </data-source>
   </component>
 </project>

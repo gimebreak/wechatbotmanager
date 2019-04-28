@@ -5,7 +5,7 @@ class DevelopmentConfig(object):
     SECRET_KEY = '123456790'
 
     # Create in-memory database
-    # DATABASE_FILE = 'jiajiawechat?charset=utf8mb4&autocommit=true'
+    # DATABASE_FILE = 'jiajiawechat?charset=utf8mb 4&autocommit=true'
     # SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:123456@localhost/' + DATABASE_FILE
     DATABASE_FILE ='sample_db.sqlite'
     SQLALCHEMY_DATABASE_URI='sqlite:///'+DATABASE_FILE
@@ -32,3 +32,20 @@ class DevelopmentConfig(object):
 
     # internationalization
     BABEL_DEFAULT_LOCALE = 'zh_hans_CN'
+
+    # flask-apscheduler
+
+    # JOBS = [
+    #     {
+    #         'id': 'job1',
+    #         'func': 'app.itchat.cron:update_activation',
+    #         'trigger': {
+    #             'type': 'cron',
+    #             'day_of_week': "sun",
+    #             'hour': '*',
+    #             'minute': '*',
+    #             'second': '*/30'
+    #         }
+    #     }
+    # ]
+    # SCHEDULER_API_ENABLED = True

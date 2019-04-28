@@ -1,0 +1,14 @@
+{% extends "admin/master.html" %}
+
+{% block body %}
+    <div id="rank">
+    <h2 style="text-align: center">热度排行榜</h2>
+    <ol>
+        {% set forlabel=1 %}
+        {% for group,count in ranklist %}
+            <li class="lead">{{ group }}:{{ count }}</li>
+        {% endfor %}
+    </ol>
+    </div>
+
+{% endblock %}

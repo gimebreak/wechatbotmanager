@@ -9,6 +9,8 @@ from flask_security import Security
 from .view import bp
 from .itchat.itchatmain import app
 from .model.model import *
+from flask_apscheduler import APScheduler
+
 
 def create_app(config):
     app.config.from_object(config)
@@ -38,6 +40,10 @@ def create_app(config):
     admin.add_view(KWNotificationGroupView(KeywordNotificationGroup, db.session, name='关键词通知群',category='消息过滤设置'))
     admin.add_view(KWWhiteListView(KeywordWhitelistUser, db.session, name='关键词白名单用户',category='消息过滤设置'))
     admin.add_view(KWBlackList(KeywordBlacklist, db.session, name='关键词黑名单',category='消息过滤设置'))
+    admin.add_view(TheWeekView(name='本周热度', category='群热度排行'))
+    admin.add_view(LastWeekView(name='上周热度',category='群热度排行'))
+    admin.add_view(LastMonthView(name='上月热度', category='群热度排行'))
+
     admin.init_app(app)
 
     @security.context_processor
@@ -48,6 +54,10 @@ def create_app(config):
             h=admin_helpers,
             get_url=url_for
         )
+
+    scheduler = APScheduler()
+    scheduler.init_app(app)
+    scheduler.start()
 
     app.app_context().push()
 

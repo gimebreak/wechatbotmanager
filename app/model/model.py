@@ -103,6 +103,9 @@ class WechatGroup(db.Model):
     keyword_notification_groups = db.relationship('KeywordNotificationGroup',
                                               backref=db.backref('group'))
 
+    activations = db.relationship('GroupActivation',
+                                              backref=db.backref('group'))
+
 
     def __repr__(self):
         return self.nickname
@@ -213,3 +216,9 @@ class KeywordBlacklist(db.Model):
 
 
 
+class GroupActivation(db.Model):
+    id = db.Column(db.Integer,primary_key=True)
+    wechat_group_id=db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
+    week_activation = db.Column(db.Integer,comment="周热度")
+    month_activation = db.Column(db.Integer,comment="月热度")
+    createtime = db.Column(db.DateTime())
