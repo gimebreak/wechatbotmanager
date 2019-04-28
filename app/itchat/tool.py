@@ -29,6 +29,7 @@ class Process_Wechat(object):
         self.model_wechat_message = WechatMessage
         self.model_welcome_info = WelcomeInfo
         self.model_user = User
+        logger.info('{}的微信账号{}登陆了'.format(self.current_user.name,self.itchat.originInstance.loginInfo.get('User').get('NickName')))
 
     def process_web_init(self,dict):
         '''
@@ -61,6 +62,7 @@ class Process_Wechat(object):
                                    sex=self.wechat_info_sex, signature=self.wechat_info_signature, status=1,
                                    admin_user_info_id=self.current_user.get_id())
                 self.db.session.add(info)
+                print(info.__dict__)
             try:
                 self.db.session.commit()
                 try:
@@ -69,6 +71,7 @@ class Process_Wechat(object):
                     self.wechat_info_id = user_record.id
                 logger.info('**************************{}'.format(self.wechat_info_id))
             except Exception as e:
+                logger.info(e)
                 logger.info('wechat_info提交失败')
 
     def _initialize(self,dbmodel,uin):
@@ -119,11 +122,11 @@ class Process_Wechat(object):
                 group=self.model_wechat_group(wechat_info_id=wechat_group_wechat_info_id.id,username=username,
                                               nickname=nickname,remarkname=remarkname,
                                               membercount=membercount,isowner=isowner)
-                print(group)
-                self.db.session.add(group)
 
+                self.db.session.add(group)
+            chatroom_names = str(list(map(lambda x:x.get('NickName'),chatroom_list)))
             try:
-                print('成功写入')
+                logger.info('成功写入群消息{}'.format(chatroom_names))
                 self.db.session.commit()
             except Exception as e:
                 logger.info('wechat_group提交失败')
@@ -139,9 +142,7 @@ class Process_Wechat(object):
                 chatroom_username = chatroom.get('UserName')
                 chatroom_nickname = chatroom.get('NickName')
                 #先取群nickname,查库返回query对象,
-                print(chatroom_nickname)
                 wechat_group_id = self.model_wechat_group.query.filter_by(nickname=chatroom_nickname,wechat_info_id=self.wechat_info_id).first()
-                print(wechat_group_id)
                 chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
                 memberlist = chatroom_info.get('MemberList')
                 for member in memberlist:
@@ -160,15 +161,15 @@ class Process_Wechat(object):
                     we_user = self.model_wechat_user(username=username, nickname=nickname,
                                                      remarkname=displayname,wechat_group_id=wechat_group_id.id,
                                                      wechat_info_id=self.wechat_info_id)
-                    print(we_user)
+
                     self.db.session.add(we_user)
 
                 try:
-                    print('成功写入')
+                    print('成功写入{}群用户'.format(chatroom_nickname))
                     self.db.session.commit()
                 except Exception as e:
                     print(e)
-                    logger.info('wechat_user提交失败')
+                    logger.info('{} 群用户信息提交失败'.format(chatroom_nickname))
 
     def load_adv_rule(self):
 
@@ -262,7 +263,6 @@ class Process_Wechat(object):
                 group = self.model_wechat_group(wechat_info_id=wechat_group_wechat_info_id.id, username=username,
                                                 nickname=nickname, remarkname=remarkname,
                                                 membercount=membercount, isowner=isowner)
-                print(group)
                 self.db.session.add(group)
 
             try:
@@ -303,7 +303,7 @@ class Process_Wechat(object):
                     self.db.session.add(we_user)
 
                 try:
-                    print('成功写入')
+                    print('成功写入{}群用户'.format(chatroom_nickname))
                     self.db.session.commit()
                 except Exception as e:
                     print(e)
