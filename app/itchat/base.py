@@ -233,15 +233,12 @@ class BaseProcess(object):
                     return None,None
 
             parent,at_name = _get_name(msg)
-            print(at_name,'at_name')
 
             if not at_name:
                 return
 
             username, at_name, remarkname = _get_newcomer(msg,at_name)
-            print(at_name,'after_get_newcomer')
-            print(username)
-            print(remarkname)
+
             group_name = msg.get('FromUserName')
 
             if at_name !=[]:
@@ -275,6 +272,8 @@ class BaseProcess(object):
                         return res
             res = _send_welcome(self.welcome_list,at_name,username)
             return res
+
+
         @itchat.msg_register([TEXT], isGroupChat=True, isFriendChat=False)
         def receive_text(msg):
             # 过滤函数
@@ -282,9 +281,7 @@ class BaseProcess(object):
                 if username not in uncs:
                     for k in kw:
                         rc = re.compile('.*?(' + k + ').*?')
-                        print(rc)
                         res = rc.findall(msg.text)
-                        print(res)
                         if res:
                             for g in ntf:
                                 sleep(random.randrange(1, 4))
@@ -319,9 +316,11 @@ class BaseProcess(object):
                 # 有问题！！！！！
                 groupname = msg.get("User").get('UserName')
                 chatroom = itchat.update_chatroom(groupname)
+                print(chatroom)
                 member_list = chatroom.get('MemberList')
-                self.wechat_init.fix_group([chatroom])
-                self.wechat_init.fix_user([chatroom])
+                #传如memberlist
+                self.wechat_init.fix_group([member_list])
+                self.wechat_init.fix_user([member_list])
                 info_nickname = itchat.originInstance.loginInfo.get('User').get('NickName')
 
                 logger.info("微信API返回信息不足，获取关键信息失败")
@@ -337,7 +336,7 @@ class BaseProcess(object):
                     user_record = WechatUser.query.filter_by(wechat_group_id=group_record.id, username=username).first()
                     msg_record = WechatMessage(wechat_user_id=user_record.id, message=text,
                                                createtime=datetime.fromtimestamp(create_time),
-                                               wechat_info_id=info_record.id)
+                                               wechat_info_id=info_record.id,wechat_group_id=group_record.id)
 
                     db.session.add(msg_record)
                     db.session.commit()

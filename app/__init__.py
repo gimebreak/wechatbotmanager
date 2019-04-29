@@ -33,7 +33,7 @@ def create_app(config):
     admin.add_view(WechatUserView(WechatUser,db.session,name='微信群用户'))
     admin.add_view(WechatWelcomeInfoView(WelcomeInfo,db.session,name='入群欢迎设置'))
     admin.add_view(AutoReplyView(AutoReply,db.session,name='自动回复'))
-    admin.add_view(FavorateMsgView(FavorateMessage, db.session, name='收藏'))
+    # admin.add_view(FavorateMsgView(FavorateMessage, db.session, name='收藏'))
     admin.add_view(AdNotificationGroupView(AdvNotificationGroup, db.session, name='广告通知群',category='消息过滤设置'))
     admin.add_view(AdWhiteListView(AdvWhitelistUser, db.session, name='广告白名单用户',category='消息过滤设置'))
     admin.add_view(AdvBlackList(AdvBlacklist, db.session, name='广告关键词',category='消息过滤设置'))
@@ -43,6 +43,7 @@ def create_app(config):
     admin.add_view(TheWeekView(name='本周热度', category='群热度排行'))
     admin.add_view(LastWeekView(name='上周热度',category='群热度排行'))
     admin.add_view(LastMonthView(name='上月热度', category='群热度排行'))
+    admin.add_view(UserMessageView(name='用户明细(不可点)',category='群热度排行'))
 
     admin.init_app(app)
 

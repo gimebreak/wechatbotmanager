@@ -1,5 +1,5 @@
 from flask_admin.contrib import sqla
-from flask import abort,redirect,url_for,request,jsonify,current_app
+from flask import abort,redirect,url_for,request,jsonify,current_app,render_template
 from flask_security import current_user
 from flask_admin.base import expose
 from flask_admin import babel
@@ -231,17 +231,20 @@ class WeChatGroupView(BaseUserView):
     # form_columns = (Wechat_group.id,Wechat_group.users)
 
 class WechatMsgView(SuperUserView):
-    column_list = ('id','wechat_user','wechat_user.group.nickname','message','createtime')
+    column_list = ('id','wechat_user','wechat_user.group.nickname','message','createtime','favorate')
     column_labels = {
         'id':u'序号',
         'wechat_user':u'微信名',
         'wechat_user.group.nickname': '所在群',
         'message':'消息内容',
         'createtime':'创建时间',
-
+        'favorate':'收藏',
+        'info':'归属用户'
     }
-    column_sortable_list =('createtime',)
-    column_filters = ('wechat_user_id',)
+    column_sortable_list =('createtime','favorate','wechat_user.group.nickname')
+    column_filters = ('wechat_user.wechat_group_id',)
+    column_editable_list=('favorate',)
+    column_default_sort = ('createtime', True)
 
 class WechatUserView(SuperUserView):
     column_list = ('id', 'nickname','group.nickname','parent' )
@@ -323,6 +326,7 @@ class AutoReplyView(SuperUserView):
         'id': u'序号',
         'type':u'发送方式',
         'keyword': '关键字',
+        'group':'群名称',
         'reply_content':'回复内容',
         'enabled':'是否启动'
     }
@@ -334,7 +338,7 @@ from flask_admin.base import BaseView
 class TheWeekView(BaseView):
     #本周
     @expose()
-    def last_week(self):
+    def the_week(self):
         start,end = the_week()
         groups = WechatGroup.query.filter_by().all()
         msg_num_dict = {}
@@ -347,10 +351,10 @@ class TheWeekView(BaseView):
                     createtime = m.createtime
                     if(createtime>start and createtime<end):
                         msg_count+=1
-            msg_num_dict.update({g.nickname:msg_count})
-        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+            msg_num_dict.update({g.nickname:[msg_count,g.id]})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1][0],reverse=True)
         # print(render_args)
-        return self.render('ranklist_master.html',ranklist=render_args)
+        return self.render('ranklist_master.html',ranklist=render_args,type="theweek")
 
 
 class LastWeekView(BaseView):
@@ -369,10 +373,10 @@ class LastWeekView(BaseView):
                     createtime = m.createtime
                     if(createtime>start and createtime<end):
                         msg_count+=1
-            msg_num_dict.update({g.nickname:msg_count})
-        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+            msg_num_dict.update({g.nickname:[msg_count,g.id]})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1][0],reverse=True)
         # print(render_args)
-        return self.render('ranklist_master.html',ranklist=render_args)
+        return self.render('ranklist_master.html',ranklist=render_args,type="lastweek")
 
 class LastMonthView(BaseView):
     #本周
@@ -390,11 +394,44 @@ class LastMonthView(BaseView):
                     createtime = m.createtime
                     if(createtime>start and createtime<end):
                         msg_count+=1
-            msg_num_dict.update({g.nickname:msg_count})
-        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+            msg_num_dict.update({g.nickname:[msg_count,g.id]})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1][0],reverse=True)
         # print(render_args)
-        return self.render('ranklist_master.html',ranklist=render_args)
+        return self.render('ranklist_master.html',ranklist=render_args,type="lastmonth")
 
+
+
+class UserMessageView(BaseView):
+    '''
+    type:lastweek,week,month
+    id: group_id
+    '''
+
+    @expose()
+    def user_message(self):
+        #
+        group_id = request.args.get('id')
+        type = request.args.get('type')
+        if type== "theweek":
+            start,end = the_week()
+        elif type== "lastweek":
+            start,end = last_week()
+        elif type == "lastmonth":
+            start,end =last_month()
+        else:start,end = 0,0
+        group = WechatGroup.query.get(group_id)
+        users = group.users
+        msg_num_dict = {}
+        for u in users:
+            msg_count = 0
+            msgs = u.msgs
+            for m in msgs:
+                createtime = m.createtime
+                if(createtime>start and createtime<end):
+                    msg_count+=1
+            msg_num_dict.update({u.nickname:msg_count})
+        render_args= sorted(msg_num_dict.items(),key=lambda x:x[1],reverse=True)
+        return self.render('user_ranklist_matser.html',args = render_args)
 
 
 

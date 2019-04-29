@@ -105,7 +105,7 @@ class WechatGroup(db.Model):
 
     activations = db.relationship('GroupActivation',
                                               backref=db.backref('group'))
-
+    msgs = db.relationship('WechatMessage',backref=db.backref('group'))
 
     def __repr__(self):
         return self.nickname
@@ -161,7 +161,9 @@ class WechatMessage(db.Model):
     createtime = db.Column(db.DateTime())
     wechat_user_id = db.Column(db.Integer, db.ForeignKey('wechat_user.id'))
     wechat_info_id = db.Column(db.Integer,db.ForeignKey('wechat_info.id'))
-    favorates = db.relationship('FavorateMessage',backref=db.backref('message'))
+    wechat_group_id = db.Column(db.Integer,db.ForeignKey('wechat_group.id'))
+    favorate = db.Column(db.Boolean())
+    # favorates = db.relationship('FavorateMessage',backref=db.backref('message'))
 
 class ImmediateGroupSending(db.Model):
 
@@ -169,11 +171,11 @@ class ImmediateGroupSending(db.Model):
     content = db.Column(db.Text)
     enabled = db.Column(db.SMALLINT,comment='1:功能启用,0:此功能暂停')
 
-class FavorateMessage(db.Model):
-
-    id = db.Column(db.Integer,primary_key=True)
-    wechat_message_id = db.Column(db.Integer, db.ForeignKey('wechat_message.id'))
-
+# class FavorateMessage(db.Model):
+#
+#     id = db.Column(db.Integer,primary_key=True)
+#     wechat_message_id = db.Column(db.Integer, db.ForeignKey('wechat_message.id'))
+#
 
 class AdvNotificationGroup(db.Model):
 
