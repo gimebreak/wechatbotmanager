@@ -1,0 +1,60 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{{ super() }}
+<script>
+    var polling = function(){
+        var check = setInterval(function(){
+           $.ajax({
+               url:'/check_login',
+               type:'get',
+               success:function(data){
+                        if(data.isLoggedIn === true){
+                            clearInterval(check);
+                            $('#qrimg').after('<h2>已登录</h2>');
+
+                            $('#qrimg').remove();
+
+
+                        }
+                    }
+           })
+       },2000);
+    }
+</script>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10 col-sm-offset-1" style="text-align: center">
+            <h1 class="text-center">微信群管理</h1>
+
+            {% if current_user.is_authenticated%}
+
+                {% if current_user.has_role('superuser') %}
+                    <script>
+                        polling()
+                    </script>
+
+                    {% if qrimg %}
+                        <p class="lead text-center">
+                            请扫码
+                            20秒后二维码失效,请重新刷新页面
+                        </p>
+                        {{ qrimg | safe }}
+                    {% endif %}
+                {% else %}
+                    <p class="lead text-center"><mark> 您是普通用户，没有登陆微信权限</mark></p>
+                {% endif %}
+            {% endif %}
+            {% if not current_user.is_authenticated %}
+            <p>如果非本站用户，请在下方注册
+            <p>
+                <a class="btn btn-primary" href="{{ url_for('security.login') }}">登陆</a> <a class="btn btn-default" href="{{ url_for('security.register') }}">注册</a>
+            </p>
+            {% endif %}
+{#            <p>#}
+{#                <a class="btn btn-primary" href="/"><i class="glyphicon glyphicon-chevron-left"></i> Back</a>#}
+{#            </p>#}
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

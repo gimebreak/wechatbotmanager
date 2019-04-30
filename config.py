@@ -5,11 +5,12 @@ class DevelopmentConfig(object):
     SECRET_KEY = '123456790'
 
     # Create in-memory database
-    # DATABASE_FILE = 'jiajiawechat?charset=utf8mb 4&autocommit=true'
-    # SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:123456@localhost/' + DATABASE_FILE
-    DATABASE_FILE ='sample_db.sqlite'
-    SQLALCHEMY_DATABASE_URI='sqlite:///'+DATABASE_FILE
-    SQLALCHEMY_ECHO = False
+    DATABASE_FILE = 'jiajiawechat?charset=utf8mb4'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:123456@localhost/' + DATABASE_FILE
+    # DATABASE_FILE ='sample_db.sqlite'
+    # SQLALCHEMY_DATABASE_URI='sqlite:///'+DATABASE_FILE
+    # SQLALCHEMY_ECHO = False
+    SQLALCHEMY_COMMIT_ON_TEARDOWN=True
     SQLALCHEMY_TRACK_MODIFICATIONS = True
 
     # Flask-Security config
@@ -32,6 +33,9 @@ class DevelopmentConfig(object):
 
     # internationalization
     BABEL_DEFAULT_LOCALE = 'zh_hans_CN'
+
+    #csrf
+    WTF_CSRF_ENABLED = False
 
     # flask-apscheduler
 

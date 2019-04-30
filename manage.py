@@ -71,6 +71,12 @@ def build_sample_db():
         db.session.commit()
     return
 
+from tornado.wsgi import WSGIContainer
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
+
+
+
 if __name__ =='__main__':
 
     # Build a sample db on the fly, if one does not exist yet.
@@ -81,6 +87,8 @@ if __name__ =='__main__':
     # print(os.path.exists(database_path))
     # if not os.path.exists(database_path):
     # build_sample_db()
-
-    app.run()
+    http_server = HTTPServer(WSGIContainer(app))
+    http_server.listen(5000)
+    IOLoop.instance().start()
+    # app.run(host='0.0.0.0', port=5000)
     # app.run(debug=True)

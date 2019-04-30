@@ -62,7 +62,6 @@ class Process_Wechat(object):
                                    sex=self.wechat_info_sex, signature=self.wechat_info_signature, status=1,
                                    admin_user_info_id=self.current_user.get_id())
                 self.db.session.add(info)
-                print(info.__dict__)
             try:
                 self.db.session.commit()
                 try:
@@ -91,8 +90,11 @@ class Process_Wechat(object):
             except:
                 return welcomeinfo_list
             for info in user_record.infos:
+
                 for group in info.groups:
+
                     for welcome in group.welcome_infos:
+
                         if welcome.enabled ==1:
                             if welcome.type==1:
                                 welcomeinfo_list.append((welcome.group.username,welcome.content))
@@ -104,7 +106,6 @@ class Process_Wechat(object):
     def process_chatroom(self,chatroom_list):
         with self.app.app_context():
             wechat_group_wechat_info_id = self.model_wechat_info.query.get(self.wechat_info_id)
-
             for chatroom in chatroom_list:
                 nickname = chatroom.get('NickName')
                 username = chatroom.get('UserName')
@@ -124,9 +125,9 @@ class Process_Wechat(object):
                                               membercount=membercount,isowner=isowner)
 
                 self.db.session.add(group)
-            chatroom_names = str(list(map(lambda x:x.get('NickName'),chatroom_list)))
+            chatroom_names = list(map(lambda x:x.get('NickName'),chatroom_list))
             try:
-                logger.info('成功写入群消息{}'.format(chatroom_names))
+                logger.info('成功写入{}个群消息，{}'.format(len(chatroom_names),str(chatroom_names)))
                 self.db.session.commit()
             except Exception as e:
                 logger.info('wechat_group提交失败')
@@ -145,6 +146,8 @@ class Process_Wechat(object):
                 wechat_group_id = self.model_wechat_group.query.filter_by(nickname=chatroom_nickname,wechat_info_id=self.wechat_info_id).first()
                 chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
                 memberlist = chatroom_info.get('MemberList')
+                print(memberlist)
+
                 for member in memberlist:
                     username = member.get('UserName')
                     nickname = member.get('NickName')
@@ -165,11 +168,10 @@ class Process_Wechat(object):
                     self.db.session.add(we_user)
 
                 try:
-                    print('成功写入{}群用户'.format(chatroom_nickname))
+                    logger.info('成功写入{}群用户'.format(chatroom_nickname))
                     self.db.session.commit()
                 except Exception as e:
-                    print(e)
-                    logger.info('{} 群用户信息提交失败'.format(chatroom_nickname))
+                    logger.error('{} 群用户信息提交失败'.format(chatroom_nickname))
 
     def load_adv_rule(self):
 
@@ -230,7 +232,7 @@ class Process_Wechat(object):
                 for g in groups:
                     replies = g.auto_replies
                     for r in replies:
-                        res.append((r.type,r.group,r.keyword,r.reply_content,r.enabled))
+                        res.append((r.type,r.group.id,r.keyword,r.reply_content,r.enabled))
             return res
 
         with self.app.app_context():
@@ -244,15 +246,12 @@ class Process_Wechat(object):
     def fix_group(self,chatroom_list):
         with self.app.app_context():
             wechat_group_wechat_info_id = self.model_wechat_info.query.get(self.wechat_info_id)
-
             for chatroom in chatroom_list:
-                print(chatroom_list)
                 nickname = chatroom.get('NickName')
                 username = chatroom.get('UserName')
                 remarkname = chatroom.get('RemarkName')
                 membercount = chatroom.get('MemberCount')
                 isowner = True if chatroom.get('IsOwner') == '1' else False
-                print(nickname,username,remarkname,membercount,isowner)
                 # 判断是否存在，存在则更新,注意wechat_info_id 加入筛选条件
                 group_record = self.model_wechat_group.query.filter_by(username=username,
                                                                        wechat_info_id=self.wechat_info_id).first()
@@ -266,8 +265,8 @@ class Process_Wechat(object):
                 self.db.session.add(group)
 
             try:
-                print('成功写入')
                 self.db.session.commit()
+                logger.info('成功写入')
             except Exception as e:
                 logger.info('wechat_group提交失败')
 
@@ -278,10 +277,8 @@ class Process_Wechat(object):
                 chatroom_nickname = chatroom.get('NickName')
                 # 先取群nickname,查库返回query对象,
                 wechat_group_id = self.model_wechat_group.query.filter_by(username=chatroom_username).first()
-                print(wechat_group_id,'wechatgroupid')
                 chatroom_info = self.itchat.update_chatroom(userName=chatroom_username)
                 memberlist = chatroom_info.get('MemberList')
-                print(memberlist)
                 for member in memberlist:
                     username = member.get('UserName')
                     nickname = member.get('NickName')

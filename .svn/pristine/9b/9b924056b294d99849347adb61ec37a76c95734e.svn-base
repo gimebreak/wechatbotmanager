@@ -1,0 +1,16 @@
+{% extends "admin/master.html" %}
+
+{% block body %}
+    <div id="rank">
+    <h2 style="text-align: center">热度排行榜</h2>
+    <ol>
+        {% set forlabel=1 %}
+        {% for group,info in ranklist %}
+            <li class="lead">
+                <a href="{{ url_for('usermessageview.user_message') }}?id={{ info[1] }}&type={{ type }}"/>{{ group }}:{{ info[0] }}
+            </li>
+        {% endfor %}
+    </ol>
+    </div>
+
+{% endblock %}

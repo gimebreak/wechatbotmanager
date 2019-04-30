@@ -126,7 +126,7 @@ class BaseProcess(object):
         self.wechat_init = Process_Wechat(db=self.db, app=self.app,
                                      itchat=self.itchat, current_user=self.current_user)
         self.wechat_init.process_web_init(init_result)
-        self.chatroomList = self.itchat.originInstance.storageClass.chatroomList
+        self.chatroomList = self.itchat.get_contact(update=True)
         self.wechat_init.process_chatroom(self.chatroomList)
         self.wechat_init.process_wechatuser(self.chatroomList)
         self.welcome_list = self.wechat_init.load_welcomeinfo()
@@ -160,28 +160,27 @@ class BaseProcess(object):
                 with self.app.app_context():
                     group = WechatGroup.query.filter_by(username=groupname).first()
                     # 若没在登入时加载，则重新加载该群
-                    try:
-                        if not group:
-                            chatroom = itchat.update_chatroom(groupname)
-                            chatroom = itchat.search_chatrooms(userName=groupname)
-                            self.wechat_init.fix_group([chatroom])
-                            self.wechat_init.fix_user([chatroom])
-                            #再次加载group
-                            group = WechatGroup.query.filter_by(username=groupname).first()
-
-                    except Exception as e:
-                        logger.error('群信息未加载成功')
-
-                    parent = WechatUser.query.filter_by(nickname=parent.strip('"'),wechat_group_id=group.id).first()
-                    user = WechatUser.query.filter_by(wechat_group_id=group.id,username=username).first()
-                    if user:
-                        weuser=user
-                        weuser.parent_id=parent.id
-                    else:
-                        weuser = WechatUser(wechat_group_id=group.id,username=username,nickname=nickname,
-                               remarkname=remarkname,wechat_info_id=group.info.id,parent_id=parent.id)
-                    self.db.session.add(weuser)
-                    self.db.session.commit()
+                    # try:
+                    #     if not group:
+                    #         chatroom = itchat.search_chatrooms(userName=groupname)
+                    #         self.wechat_init.fix_group([chatroom])
+                    #         self.wechat_init.fix_user([chatroom])
+                    #         #再次加载group
+                    #         group = WechatGroup.query.filter_by(username=groupname).first()
+                    #
+                    # except Exception as e:
+                    #     logger.error('群信息未加载成功')
+                    if group:
+                        parent = WechatUser.query.filter_by(nickname=parent.strip('"'),wechat_group_id=group.id).first()
+                        user = WechatUser.query.filter_by(wechat_group_id=group.id,username=username).first()
+                        if user:
+                            weuser=user
+                            weuser.parent_id=parent.id
+                        else:
+                            weuser = WechatUser(wechat_group_id=group.id,username=username,nickname=nickname,
+                                   remarkname=remarkname,wechat_info_id=group.info.id,parent_id=parent.id)
+                        self.db.session.add(weuser)
+                        self.db.session.commit()
 
             def _get_newcomer(msg,at_name):
                 usernames = []
@@ -238,22 +237,18 @@ class BaseProcess(object):
                 return
 
             username, at_name, remarkname = _get_newcomer(msg,at_name)
-
             group_name = msg.get('FromUserName')
-
             if at_name !=[]:
                 for un,an,rm in zip(username,at_name,remarkname):
                     _add_parent(parent, group_name,un,an,rm)
 
-            def _send_welcome(welcome_list,at_names,usernames):
 
+            def _send_welcome(welcome_list,at_name,usernames):
+                print(welcome_list,at_name,usernames)
                 # 随机发送欢迎消息
                 filtered_list = list(filter(lambda x: x[0] == group_name, welcome_list))
-                print(filtered_list)
                 if len(filtered_list) > 1:
                     random.shuffle(filtered_list)
-                print(at_name)
-
                 #查询真实nickname,非displayname,才能真正@一个人
                 at_name_list=[]
                 combine_names = zip(at_name,usernames)
@@ -264,13 +259,14 @@ class BaseProcess(object):
                         nickname =an
                     at_name_list.append('@'+nickname+' ')
 
-                print(at_name_list)
                 for username, content in filtered_list:
                     if username == group_name:
                         res = ''.join(at_name_list)+'  ' + content
                         sleep(random.randrange(3,5))
                         return res
+
             res = _send_welcome(self.welcome_list,at_name,username)
+            print(res,'welcome_info!!!!!!!!!!!')
             return res
 
 
@@ -290,20 +286,21 @@ class BaseProcess(object):
 
             # 暂未开放全部回复
             def _auto_reply(rule):
-                print(rule)
                 for tp, gp, kw, rc, en, in rule:
-                    if group == gp.username:
-                        if en == 1:
-                            rcom = re.compile('.*?(' + kw + ').*?')
-                            res = rcom.findall(msg.text)
-                            if res:
-                                sleep(random.randrange(1, 4))
-                                itchat.send(rc, toUserName=gp.username)
-                                break
+                    with self.app.app_context():
+                        gp=WechatGroup.query.get(gp)
+                        if group == gp.username:
+                            if en == 1:
+                                rcom = re.compile('.*?(' + kw + ').*?')
+                                res = rcom.findall(msg.text)
+                                if res:
+                                    sleep(random.randrange(1, 4))
+                                    itchat.send(rc, toUserName=gp.username)
+                                    break
 
-            print(msg.text)
-            print(msg)
-            print(itchat.originInstance.loginInfo)
+            # print(msg.text)
+            # print(msg)
+            # print(itchat.originInstance.loginInfo)
 
             try:
                 group = msg.get('User').get('UserName')
@@ -311,16 +308,15 @@ class BaseProcess(object):
                 username = msg.get('ActualUserName')
                 nickname = msg.get('ActualNickName')
                 info_nickname = msg.get('User').get('Self').get('NickName')
-            except AttributeError:
-
+            except Exception as e:
                 # 有问题！！！！！
                 groupname = msg.get("User").get('UserName')
                 chatroom = itchat.update_chatroom(groupname)
-                print(chatroom)
+                # print(chatroom)
                 member_list = chatroom.get('MemberList')
-                #传如memberlist
-                self.wechat_init.fix_group([member_list])
-                self.wechat_init.fix_user([member_list])
+                #传入memberlist
+                self.wechat_init.fix_group([chatroom])
+                self.wechat_init.fix_user([chatroom])
                 info_nickname = itchat.originInstance.loginInfo.get('User').get('NickName')
 
                 logger.info("微信API返回信息不足，获取关键信息失败")
@@ -330,20 +326,34 @@ class BaseProcess(object):
             create_time = msg.get('CreateTime')
             # 消息写库
             with self.app.app_context():
-                group_record = WechatGroup.query.filter_by(username=group).first()
                 info_record = WechatInfo.query.filter_by(nickname=info_nickname).first()
+                group_record = WechatGroup.query.filter_by(username=group).first() \
+                               or WechatGroup.query.filter_by(nickname=group_nickname,wechat_info_id=info_record.id).first()
+
+                # if not group_record:
+                #     chatroom = itchat.update_chatroom(group)
+                #     self.wechat_init.fix_group([chatroom])
+                #     self.wechat_init.fix_user([chatroom])
+                #     group_record = WechatGroup.query.filter_by(username=group).first()
+                #     print(group_record)
+
                 if group_record:
                     user_record = WechatUser.query.filter_by(wechat_group_id=group_record.id, username=username).first()
+                    print(user_record)
+                    info_record = WechatInfo.query.filter_by(nickname=info_nickname).first()
                     msg_record = WechatMessage(wechat_user_id=user_record.id, message=text,
                                                createtime=datetime.fromtimestamp(create_time),
                                                wechat_info_id=info_record.id,wechat_group_id=group_record.id)
-
                     db.session.add(msg_record)
                     db.session.commit()
+                else:
+                    logger.error('还是失败了！！！！！！！！！！！！！！！！！！！！！！！！！！！！')
 
             ad_notifs, ad_uncensor, ad_keywords = self.rule.get('ad_rule')
             _msgfilter(ad_notifs, ad_uncensor, ad_keywords)
             k_notifs, k_uncensor, k_keyword = self.rule.get('keyword_rule')
             _msgfilter(k_notifs, k_uncensor, k_keyword)
+            print(dir(self))
             auto_reply_rule = self.auto_replies
+            print(auto_reply_rule)
             _auto_reply(auto_reply_rule)

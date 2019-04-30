@@ -90,6 +90,25 @@ class BaseUserView(sqla.ModelView):
     #     print('hello')
     #     return super(MyModelView,self).index_view()
 
+    def after_model_change(self, form, model, is_created):
+        print('*******************************************************')
+        wechat_init=getattr(process,'wechat_init',None)
+        if wechat_init ==None:
+            print('not in ******************************')
+            return
+        ad_notifs, ad_uncensor, ad_keywords = wechat_init.load_adv_rule()
+        process.rule ={'ad_rule':[],'keyword_rule':[]} #清零
+        process.rule['ad_rule'].extend([ad_notifs, ad_uncensor, ad_keywords])
+        k_notifs, k_uncensor, k_keyword = wechat_init.load_keyword_rule()
+        process.rule['keyword_rule'].extend([k_notifs, k_uncensor, k_keyword])
+
+        logger.info("更新了关键字信息，关键字通知群:{},关键字白名单{},"
+                    "关键字{}".format(str(ad_notifs), str(ad_uncensor), str(ad_keywords)))
+        logger.info( "更新了关键字信息，关键字通知群:{},关键字白名单{},"
+                     "关键字{}".format(str(k_notifs), str(k_uncensor), str(k_keyword)))
+
+
+
     def is_accessible(self):
         return (current_user.is_active and
                 current_user.is_authenticated and
@@ -231,18 +250,19 @@ class WeChatGroupView(BaseUserView):
     # form_columns = (Wechat_group.id,Wechat_group.users)
 
 class WechatMsgView(SuperUserView):
-    column_list = ('id','wechat_user','wechat_user.group.nickname','message','createtime','favorate')
+    column_list = ('id','wechat_user','group.nickname','message','createtime','favorate')
     column_labels = {
         'id':u'序号',
         'wechat_user':u'微信名',
-        'wechat_user.group.nickname': '所在群',
+        'wechat_user.nickname':'微信名',
+        'group.nickname': '所在群',
         'message':'消息内容',
         'createtime':'创建时间',
         'favorate':'收藏',
         'info':'归属用户'
     }
     column_sortable_list =('createtime','favorate','wechat_user.group.nickname')
-    column_filters = ('wechat_user.wechat_group_id',)
+    column_filters = ('group.nickname','wechat_user.nickname')
     column_editable_list=('favorate',)
     column_default_sort = ('createtime', True)
 
@@ -258,6 +278,16 @@ class WechatUserView(SuperUserView):
 
 
 class WechatWelcomeInfoView(GroupBasedView):
+
+    def after_model_change(self, form, model, is_created):
+        wechat_init = getattr(process, 'wechat_init', None)
+        if wechat_init == None:
+            print('not in ******************************')
+        process.welcome_list = wechat_init.load_welcomeinfo()
+        logger.info("更新了自动欢迎通知列表{}".format(str(process.welcome_list)))
+
+
+
     column_list = ('id', 'group','type','content','pic_url','enabled' )
     column_labels = {
         'id': u'序号',
@@ -331,6 +361,15 @@ class AutoReplyView(SuperUserView):
         'enabled':'是否启动'
     }
 
+    def after_model_change(self, form, model, is_created):
+        print('*******************************************************')
+        wechat_init = getattr(process, 'wechat_init', None)
+        if wechat_init == None:
+            print('not in ******************************')
+            return
+
+        process.auto_replies = wechat_init.load_auto_reply()
+        logger.info("更新了自动回复列表{}".format(str(process.auto_replies)))
 
 from flask_admin.base import BaseView
 
